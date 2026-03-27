@@ -5,7 +5,7 @@ The year 2044. Fifteen years ago, the world ended.
 
 Not all at once. Not with silence. With sirens. With fire. With cities erased in a single flash.
 
-One egomanaical empire broke the world’s spine. The retaliation finished the job. Nations burned. Governments collapsed. Civilization drowned in ash, radiation, and panic. The Third World War didn’t just kill billions.
+One egomanaical empire broke the world’s spine with the press of a button. The retaliation finished the job. Nukes rained. Nations burned. Governments collapsed. Civilization drowned in ash, radiation, and panic. The Third World War didn’t just kill billions.
 
 It killed mercy.
 
