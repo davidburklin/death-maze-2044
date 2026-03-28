@@ -1,95 +1,38 @@
 # Death Maze 2044
-<img width="1536" height="1024" alt="Deathmaze2044" src="https://github.com/user-attachments/assets/f210068b-8f5f-45a2-80f1-b70c12dfed00" />
 
-The year 2044. Fifteen years ago, the world ended.
+Death Maze 2044 is a multiplayer sci-fi survival game prototype built with Nuxt 4, Vue 3, TypeScript, Pinia, and Convex. Players explore the maze in real time, drop into initiative-driven combat, and try to survive long enough to escape.
 
-Not all at once. Not with silence. With sirens. With fire. With cities erased in a single flash.
+## Current Status
 
-One egomanaical empire broke the world’s spine with the press of a button. The retaliation finished the job. Nukes rained. Nations burned. Governments collapsed. Civilization drowned in ash, radiation, and panic. The Third World War didn’t just kill billions.
+The repo is still in the planning and scaffolding stage.
 
-It killed mercy.
+- Architecture, auth, and execution docs are in place.
+- Gameplay systems and Convex integration have not been implemented yet.
+- The current app shell still contains starter content and will be replaced in Phase 0.
 
-From the ruins rose a new order. Ruthless. Absolute. Unforgiving.
+## Key Docs
 
-The Regime.
+- [Implementation plan](./docs/implementation-plan.md)
+- [Execution checklist](./docs/execution-checklist.md)
+- [Authentication architecture](./docs/auth-architecture.md)
+- [Homepage IA](./docs/homepage-ia.md)
+- [Legacy port notes](./docs/legacy-port-notes.md)
+- [Resume handoff](./docs/resume-handoff.md)
 
-They promised survival.
-They delivered fear.
+## Planned Architecture
 
-Under The Regime, justice became theater. Guilt became whatever they said it was. Rebels, looters, deserters, dissenters, war criminals… all were fed into the same machine.
-
-A machine called the Maze.
-
-Buried beneath the bones of the old world, the Death Maze was built as punishment, spectacle, and warning. A shifting labyrinth of rusted steel, shattered concrete, bloodstained corridors, and locked sectors no sane person was ever meant to see.
-
-No one enters the Maze to live. They enter to be judged. They enter to die.
-
-You are one of the condemned, thrown into the dark with a promise whispered through prison camps and execution yards:
-
-Survive the Maze. Escape its depths. Earn a pardon for your crimes against humanity.
-
-Maybe it’s true. Maybe it’s just one more lie.
-
-Inside, every step is a gamble.
-Every room is a test.
-Every sound could be a clue… or the last thing you ever hear.
-
-You won’t be alone.
-
-Others within the maze may become allies. They may help you fight, help you search, help you survive. Or they may sabotage you, betray you, or leave your body cooling in the dark for whatever comes next.
-
-In the Maze, trust is a risk and friendly fire is never an accident for long.
-
-Worse still, the labyrinth is not empty. The halls crawl with things born from radiation, madness, failed experiments, and years of unchecked horror. They lurk in the dark, nest in the forgotten chambers, and feed on the desperate. And over them rule the Wardens — monstrous bosses who control each domain of the Maze and guard the keys to deeper sectors.
-
-To move forward, you must face them.
-To face them, you must survive everything beneath them.
-And the deeper you go… the less human the Maze becomes.
-
-The Regime calls this justice.
-The masses call it entertainment.
-The Wardens call it home.
-
-But there are still rumors.
-
-Rumors that someone once reached the final gate.
-Rumors that the Maze has an end.
-Rumors that beneath all the blood and ruin, there is still a way out.
-
-A way to live.
-A way to be free.
-A way to become something no one expects a condemned soul to become.
-
-A hero.
-
-But the Maze does not care who you were before you entered.
-It only cares how long you last.
-
-So choose your alliances carefully.
-Watch every doorway.
-Count every bullet.
-And when the darkness starts closing in…
-
-Keep moving.
-
-Because in Death Maze 2044…
-You are not expected to win.
-You are expected to die.
-
-
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
-
-[Install Bun](https://bun.com/)
+- Nuxt 4 handles the client and page shell.
+- Convex is the authoritative source of game state and real-time sync.
+- Shared deterministic game rules live outside `app/` under `shared/game`.
+- Google OAuth is the only required auth provider for the first playable milestone.
 
 ## Setup
 
-Make sure to install dependencies:
+Install dependencies:
 
 ```bash
 bun install
 ```
-
-## Development Server
 
 Start the development server on `http://localhost:3000`:
 
@@ -97,18 +40,19 @@ Start the development server on `http://localhost:3000`:
 bun run dev
 ```
 
-## Production
-
-Build the application for production:
+Build for production:
 
 ```bash
 bun run build
 ```
 
-Locally preview production build:
+Preview the production build locally:
 
 ```bash
 bun run preview
 ```
 
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+## Notes
+
+- Additional scripts for linting, type checking, and testing are planned as part of Phase 0.
+- Keep secrets out of the repo; use `.env.example` for placeholders only.
