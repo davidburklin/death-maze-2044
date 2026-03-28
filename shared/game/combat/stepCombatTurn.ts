@@ -59,7 +59,7 @@ export const applyDamage = (state: CombatState, targetId: string, damage: number
   if (aliveOrder.length === 0) {
     newTurnIndex = 0;
   } else {
-    const currentAliveIdx = aliveOrder.indexOf(currentId);
+    const currentAliveIdx = currentId ? aliveOrder.indexOf(currentId) : -1;
     if (currentAliveIdx >= 0) {
       newTurnIndex = currentAliveIdx;
     } else {

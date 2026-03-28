@@ -1,13 +1,17 @@
 {
-  "name": "nuxt-starter",
+  "name": "death-maze-2044",
   "type": "module",
   "private": true,
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
+    "lint": "eslint .",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "nuxt typecheck"
   },
   "dependencies": {
     "@nuxt/devtools": "3.1.1",
@@ -26,6 +30,7 @@
     "vue-router": "^4.6.3"
   },
   "devDependencies": {
+    "@types/node": "^22.18.7",
     "vitest": "^4.1.2"
   }
 }

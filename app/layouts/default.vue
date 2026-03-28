@@ -2,16 +2,18 @@
   <div>
     <UHeader>
       <template #title>
-        <NuxtImg
-          src="/nuxt-starter-logo.png"
-          alt="Your Logo"
-          height="48"
-          class="my-1"
-        />
+        <NuxtLink to="/" class="text-lg font-semibold tracking-wide">
+          Death Maze 2044
+        </NuxtLink>
       </template>
 
       <template #right>
-        <UColorModeButton />
+        <UButton to="/" variant="ghost" color="neutral" size="sm">
+          Home
+        </UButton>
+        <UButton to="/lobby" variant="soft" color="primary" size="sm">
+          Enter Lobby
+        </UButton>
       </template>
     </UHeader>
 
@@ -19,6 +21,9 @@
       <slot />
     </UMain>
 
-    <UFooter />
+    <USeparator />
+    <footer class="mx-auto w-full max-w-7xl px-4 py-6 text-sm text-muted">
+      Death Maze 2044 prototype shell. Real-time co-op survival is in active development.
+    </footer>
   </div>
 </template>

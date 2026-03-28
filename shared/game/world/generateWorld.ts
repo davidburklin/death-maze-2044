@@ -34,7 +34,12 @@ const connectId = (from: CellCoord, to: CellCoord): string =>
   `${from.x},${from.y}->${to.x},${to.y}`;
 
 const parseCoordKey = (value: string): CellCoord => {
-  const [x, y] = value.split(",").map(Number);
+  const [rawX, rawY] = value.split(",");
+  const x = Number(rawX);
+  const y = Number(rawY);
+  if (!Number.isFinite(x) || !Number.isFinite(y)) {
+    throw new Error(`Invalid coordinate key: ${value}`);
+  }
   return { x, y };
 };
 

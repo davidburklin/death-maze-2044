@@ -2,56 +2,57 @@
   <UPage>
     <UPageBody>
       <UPageHero
-        title="TJ's Nuxt Starter"
-        description="A modern starter template for building Nuxt 4 applications."
+        title="Death Maze 2044"
+        description="A real-time cooperative survival prototype where your squad navigates a hostile megastructure, drops into deterministic initiative combat, and races to override the nexus core."
       />
       <UPageSection
-        title="Sensible Conventions"
-        description="Built with industry-standard conventions for maintainable, scalable projects."
-        :features="conventions"
+        title="Core Loop"
+        description="Scout the maze, secure signal fragments, breach network locks, and survive combat rounds long enough to reach extraction."
+        :features="coreLoop"
       />
       <UPageSection
-        title="Build Faster with AI"
-        description="Designed for AI-assisted workflows—ship features faster with intelligent code generation"
-        :features="features"
+        title="Phase 0 Status"
+        description="Foundations are being wired now so gameplay systems can be implemented with deterministic contract tests and Convex-authoritative state."
+        :features="status"
       />
     </UPageBody>
   </UPage>
 </template>
 
 <script setup lang="ts">
-const conventions = [
+const coreLoop = [
   {
-    icon: 'i-lucide-folder-open',
-    title: 'File Structure',
-    description: 'Organized file structure following Nuxt 4 best practices.',
+    icon: 'i-lucide-radar',
+    title: 'Explore',
+    description: 'Party movement is synchronized in real time as players map macro-cells and route options.',
   },
   {
-    icon: 'i-lucide-palette',
-    title: 'Theming',
-    description: 'Dark and light mode support with easy customization.',
+    icon: 'i-lucide-swords',
+    title: 'Engage',
+    description: 'Encounter triggers create isolated combat instances with deterministic initiative and turn order.',
   },
   {
-    icon: 'i-lucide-component',
-    title: 'UI Components',
-    description: 'Pre-built UI components using Nuxt UI for rapid development.',
+    icon: 'i-lucide-cpu',
+    title: 'Override',
+    description: 'Runs complete by collecting enough signal fragments to override the nexus core and satisfy contract conditions.',
   },
 ]
-const features = [
+
+const status = [
   {
-    icon: 'i-lucide-robot',
-    title: 'AI Integration',
-    description: 'Seamlessly integrate with AI code generation and assistance tools.',
+    icon: 'i-lucide-check-check',
+    title: 'Deterministic Rules',
+    description: 'Shared world generation and combat primitives are already test-covered for reproducibility.',
   },
   {
-    icon: 'i-lucide-rocket',
-    title: 'Instant Prototyping',
-    description: 'Go from idea to working prototype in minutes, not hours.',
+    icon: 'i-lucide-database-zap',
+    title: 'Authoritative Backend',
+    description: 'Convex scaffolding and identity mapping are the next wiring steps in this implementation track.',
   },
   {
-    icon: 'i-lucide-handshake',
-    title: 'AI Context Built-In',
-    description: 'AGENTS.md gives AI tools the context they need to help you code faster.',
+    icon: 'i-lucide-shield-check',
+    title: 'Google OAuth First',
+    description: 'Authentication scope is intentionally constrained to Google for the first playable milestone.',
   },
 ]
 </script>

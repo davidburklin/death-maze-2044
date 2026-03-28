@@ -1,3 +1,4 @@
+import process from "node:process";
 import { generateWorld, type GenerateWorldOptions } from "../index";
 
 interface CliOptions extends GenerateWorldOptions {

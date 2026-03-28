@@ -33,7 +33,7 @@ export const createRng = (seed: number): Rng => {
       if (values.length === 0) {
         throw new Error("Cannot pick from empty array");
       }
-      return values[Math.floor(next() * values.length)];
+      return values[Math.floor(next() * values.length)]!;
     }
   };
 };

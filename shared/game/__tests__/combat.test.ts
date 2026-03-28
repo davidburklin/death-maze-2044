@@ -49,7 +49,7 @@ describe("combat turn management", () => {
     ]);
 
     state = applyDamage(state, "b", 5);
-    expect(state.combatants["b"].hp).toBe(0);
+    expect(state.combatants["b"]!.hp).toBe(0);
     expect(state.turnOrder).toEqual(["a", "c"]);
     expect(state.active).toBe(true);
   });
@@ -130,7 +130,7 @@ describe("combat turn management", () => {
     ]);
 
     state = applyDamage(state, "b", -5);
-    expect(state.combatants["b"].hp).toBe(10);
+    expect(state.combatants["b"]!.hp).toBe(10);
   });
 
   it("ignores damage to unknown target", () => {
