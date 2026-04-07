@@ -1,2 +1,208 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
+
+:root {
+	--dm-crawl-bg-top: #0b0e0d;
+	--dm-crawl-bg-bottom: #1a130c;
+	--dm-crawl-text: #f4d9a6;
+	--dm-crawl-accent: #b38a4a;
+	--dm-crawl-fog: rgb(107 90 61 / 0.2);
+	--dm-crawl-glow: rgb(179 138 74 / 0.35);
+}
+
+.dm-vibe-surface {
+	position: relative;
+	overflow: hidden;
+	background:
+		radial-gradient(circle at 20% 25%, var(--dm-crawl-fog), transparent 48%),
+		linear-gradient(180deg, var(--dm-crawl-bg-top) 0%, var(--dm-crawl-bg-bottom) 100%);
+	box-shadow:
+		inset 0 1px 0 rgb(255 255 255 / 0.04),
+		inset 0 -36px 60px rgb(0 0 0 / 0.35),
+		0 24px 60px rgb(0 0 0 / 0.35);
+}
+
+.dm-vibe-surface::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	background:
+		repeating-linear-gradient(
+			to bottom,
+			rgb(255 255 255 / 0.02) 0,
+			rgb(255 255 255 / 0.02) 1px,
+			transparent 1px,
+			transparent 4px
+		),
+		radial-gradient(circle at 50% -12%, rgb(0 0 0 / 0), rgb(0 0 0 / 0.58) 75%);
+	mix-blend-mode: soft-light;
+}
+
+.dm-kicker {
+	position: relative;
+	z-index: 1;
+	display: inline-flex;
+	margin-bottom: 0.75rem;
+	padding: 0.15rem 0.65rem;
+	border: 1px solid rgb(255 255 255 / 0.15);
+	border-radius: 999px;
+	font-size: 0.75rem;
+	font-weight: 600;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: rgb(255 238 214 / 0.88);
+}
+
+.dm-heading {
+	position: relative;
+	z-index: 1;
+	font-family: "Bebas Neue", "Oswald", "Arial Narrow", sans-serif;
+	letter-spacing: 0.06em;
+	line-height: 0.95;
+	color: rgb(251 228 186 / 0.98);
+	text-wrap: balance;
+}
+
+.dm-crawl-shell {
+	position: relative;
+	z-index: 1;
+	height: min(49vh, 420px);
+	overflow: hidden;
+	border: 1px solid rgb(255 255 255 / 0.12);
+	border-radius: 1rem;
+	background:
+		linear-gradient(180deg, rgb(0 0 0 / 0.08), rgb(0 0 0 / 0.55)),
+		linear-gradient(180deg, rgb(46 31 18 / 0.35), rgb(0 0 0 / 0.3));
+}
+
+.dm-crawl-shell::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	background: linear-gradient(180deg, rgb(0 0 0 / 0.7) 0%, transparent 24%, transparent 66%, rgb(0 0 0 / 0.82) 100%);
+}
+
+.dm-crawl-stage {
+	position: absolute;
+	inset: 0;
+	perspective: 760px;
+	perspective-origin: 50% 100%;
+}
+
+.dm-crawl-stage::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	background:
+		radial-gradient(circle at 50% 88%, rgb(244 217 166 / 0.18), transparent 28%),
+		radial-gradient(circle at 50% 108%, rgb(255 255 255 / 0.08), transparent 22%);
+	opacity: 0.9;
+}
+
+.dm-crawl-track {
+	position: absolute;
+	left: 50%;
+	bottom: -34%;
+	width: min(100% - 2rem, 38rem);
+	transform-origin: 50% 100%;
+	transform: translateX(-50%) rotateX(28deg) translateY(112%);
+	animation: dm-crawl-scroll 48s linear infinite;
+	will-change: transform, opacity;
+}
+
+.dm-crawl-track.is-paused {
+	animation-play-state: paused;
+}
+
+.dm-crawl-line {
+	max-width: 30ch;
+	margin: 0 0 0.9rem;
+	margin-inline: auto;
+	text-align: center;
+	font-family: "IBM Plex Sans Condensed", "Segoe UI", sans-serif;
+	font-size: clamp(1.28rem, 2.9vw, 1.94rem);
+	font-weight: 550;
+	letter-spacing: 0.055em;
+	line-height: 1.46;
+	color: var(--dm-crawl-text);
+	text-shadow:
+		0 0 12px var(--dm-crawl-glow),
+		0 0 28px rgb(179 138 74 / 0.14);
+}
+
+.dm-crawl-line:last-child {
+	margin-bottom: 0;
+}
+
+.dm-story-divider {
+	height: 1px;
+	background: linear-gradient(90deg, transparent, rgb(179 138 74 / 0.8), transparent);
+}
+
+.dm-story-flow {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+.dm-story-paragraph {
+	margin: 0;
+	font-family: "IBM Plex Sans Condensed", "Segoe UI", sans-serif;
+	font-size: clamp(1.02rem, 1.6vw, 1.16rem);
+	font-weight: 450;
+	line-height: 1.72;
+	letter-spacing: 0.014em;
+	color: rgb(245 228 198 / 0.94);
+}
+
+@keyframes dm-crawl-scroll {
+	0% {
+		transform: translateX(-50%) rotateX(28deg) translateY(112%);
+		opacity: 1;
+	}
+
+	60% {
+		opacity: 1;
+	}
+
+	100% {
+		transform: translateX(-50%) rotateX(28deg) translateY(-270%);
+		opacity: 0.1;
+	}
+}
+
+@media (max-width: 768px) {
+	.dm-crawl-shell {
+		height: min(52vh, 380px);
+	}
+
+	.dm-crawl-stage {
+		perspective: 620px;
+	}
+
+	.dm-crawl-track {
+		bottom: -24%;
+		width: min(100% - 1.5rem, 32rem);
+		transform: translateX(-50%) rotateX(23deg) translateY(106%);
+		animation-duration: 42s;
+	}
+
+	@keyframes dm-crawl-scroll {
+		0% {
+			transform: translateX(-50%) rotateX(23deg) translateY(106%);
+			opacity: 1;
+		}
+
+		60% {
+			opacity: 1;
+		}
+
+		100% {
+			transform: translateX(-50%) rotateX(23deg) translateY(-245%);
+			opacity: 0.1;
+		}
+	}
+}
