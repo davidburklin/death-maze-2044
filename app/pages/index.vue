@@ -5,9 +5,9 @@
         <p class="dm-kicker">Live Transmission</p>
         <h1 class="dm-heading text-4xl md:text-6xl">Death Maze 2044</h1>
         <p class="mt-4 max-w-3xl text-base leading-relaxed text-neutral-200/90 md:text-lg">
-          A real-time multiploayer survival game. Survive the horrors within the maze long
-          enough to escape, or meet your expected death. Real Time exploration with hybrid
-          turn based combat.
+          A real-time multiplayer survival game. Survive the horrors within the maze long
+          enough to escape, or meet your expected death. Real-time exploration with hybrid
+          turn-based combat.
         </p>
 
         <div class="dm-crawl-shell mt-8">
@@ -31,6 +31,9 @@
         </div>
 
         <div class="mt-6 flex flex-wrap gap-3">
+          <UButton to="/lobby" color="primary" icon="i-lucide-door-open">
+            Enter lobby
+          </UButton>
           <UButton
             color="neutral"
             variant="soft"
