@@ -115,8 +115,8 @@ export const useAuth = () => {
 
     if (currentPlayer) {
       user.value = {
-        displayName: currentPlayer.displayName,
-        avatarUrl: currentPlayer.avatarUrl,
+        displayName: currentPlayer.lobbyName ?? currentPlayer.displayName,
+        avatarUrl: currentPlayer.avatarKey ? `/${currentPlayer.avatarKey}` : currentPlayer.avatarUrl,
       }
       return
     }
