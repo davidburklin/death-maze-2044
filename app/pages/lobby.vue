@@ -499,16 +499,29 @@ const initializeAuthenticatedExperience = async (): Promise<void> => {
   profileErrorMessage.value = null
   lobbyErrorMessage.value = null
 
-  await convexClient.mutation(api.players.ensureCurrentPlayer, {})
-  await loadAvatarOptions()
-  await loadCurrentPlayerProfile()
+  try {
+    await convexClient.mutation(api.players.ensureCurrentPlayer, {})
+    await loadAvatarOptions()
+    await loadCurrentPlayerProfile()
 
-  if (requiresProfileSetup.value) {
-    stopLobbyPolling()
-    return
+    if (requiresProfileSetup.value) {
+      stopLobbyPolling()
+      return
+    }
+
+    await initializeLobby()
   }
+  catch (error) {
+    stopLobbyPolling()
+    const message = error instanceof Error ? error.message : 'Failed to initialize your lobby experience.'
 
-  await initializeLobby()
+    if (requiresProfileSetup.value) {
+      profileErrorMessage.value = message
+    }
+    else {
+      lobbyErrorMessage.value = message
+    }
+  }
 }
 
 onMounted(async () => {
