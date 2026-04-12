@@ -1,21 +1,29 @@
 import { access, readdir } from 'node:fs/promises'
-import { resolve } from 'node:path'
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 const AVATAR_FILE_PATTERN = /^avt-\d{3}\.svg$/
 
-async function resolveAvatarsDirectory() {
-  const candidateDirectories = [
-    resolve(process.cwd(), 'public'),
-    resolve(process.cwd(), '.output', 'public'),
+async function resolveAvatarsDirectory(): Promise<string | null> {
+  const startDirectories = [
+    dirname(fileURLToPath(import.meta.url)),
+    process.cwd(),
   ]
 
-  for (const directory of candidateDirectories) {
-    try {
-      await access(directory)
-      return directory
-    }
-    catch {
-      // Try the next candidate directory.
+  for (const startDir of startDirectories) {
+    let dir = startDir
+    for (let depth = 0; depth < 10; depth++) {
+      const candidate = resolve(dir, 'public')
+      try {
+        await access(candidate)
+        return candidate
+      }
+      catch {
+        // Continue searching up the directory tree.
+      }
+      const parent = dirname(dir)
+      if (parent === dir) break
+      dir = parent
     }
   }
 
