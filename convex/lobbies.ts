@@ -189,7 +189,7 @@ export const getCurrentLobbyView = query({
     const lobbyMembers = await ctx.db
       .query("lobbyMembers")
       .withIndex("by_lobby", (q) => q.eq("lobbyId", lobby._id))
-      .take(lobby.maxPlayers);
+      .collect();
 
     const members = [] as Array<{
       playerId: Id<"players">;
