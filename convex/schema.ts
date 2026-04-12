@@ -5,6 +5,8 @@ export default defineSchema({
   players: defineTable({
     displayName: v.string(),
     avatarUrl: v.optional(v.string()),
+    lobbyName: v.optional(v.string()),
+    avatarKey: v.optional(v.string()),
     createdAt: v.number(),
     lastSeenAt: v.number(),
   }),
@@ -60,6 +62,25 @@ export default defineSchema({
     characterId: v.optional(v.id("characters")),
     isReady: v.boolean(),
     joinedAt: v.number(),
+  })
+    .index("by_lobby", ["lobbyId"])
+    .index("by_player", ["playerId"])
+    .index("by_lobby_and_player", ["lobbyId", "playerId"]),
+
+  lobbyMessages: defineTable({
+    lobbyId: v.id("lobbies"),
+    playerId: v.id("players"),
+    body: v.string(),
+    createdAt: v.number(),
+  })
+    .index("by_lobby", ["lobbyId"])
+    .index("by_lobby_and_created_at", ["lobbyId", "createdAt"]),
+
+  lobbyTypingStatus: defineTable({
+    lobbyId: v.id("lobbies"),
+    playerId: v.id("players"),
+    isTyping: v.boolean(),
+    updatedAt: v.number(),
   })
     .index("by_lobby", ["lobbyId"])
     .index("by_player", ["playerId"])
