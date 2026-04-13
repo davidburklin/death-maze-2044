@@ -1,5 +1,5 @@
 import { mutation, query } from "./_generated/server";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 import type { Doc, Id } from "./_generated/dataModel";
 
@@ -8,7 +8,7 @@ const AVATAR_KEY_PATTERN = /^avt-\d{3}\.svg$/;
 function sanitizeLobbyName(rawName: string): string {
   const trimmed = rawName.trim();
   if (trimmed.length < 2 || trimmed.length > 24) {
-    throw new Error("Lobby name must be between 2 and 24 characters.");
+    throw new ConvexError("Lobby name must be between 2 and 24 characters.");
   }
   return trimmed;
 }
@@ -16,7 +16,7 @@ function sanitizeLobbyName(rawName: string): string {
 function validateAvatarKey(avatarKey: string): string {
   const trimmed = avatarKey.trim();
   if (!AVATAR_KEY_PATTERN.test(trimmed)) {
-    throw new Error("Avatar selection is invalid.");
+    throw new ConvexError("Avatar selection is invalid.");
   }
   return trimmed;
 }
@@ -49,7 +49,7 @@ export const ensureCurrentPlayer = mutation({
   args: {},
   handler: async (ctx): Promise<Id<"players">> => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Not authenticated");
+    if (!identity) throw new ConvexError("Not authenticated");
 
     const now = Date.now();
 
@@ -95,10 +95,10 @@ export const updateCurrentProfile = mutation({
   },
   handler: async (ctx, args): Promise<Doc<"players">> => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Not authenticated");
+    if (!identity) throw new ConvexError("Not authenticated");
 
     const player = await getPlayerByTokenIdentifier(ctx, identity.tokenIdentifier);
-    if (!player) throw new Error("Player record not found. Call ensureCurrentPlayer first.");
+    if (!player) throw new ConvexError("Player record not found. Call ensureCurrentPlayer first.");
 
     const nextLobbyName = sanitizeLobbyName(args.lobbyName);
     const nextAvatarKey = validateAvatarKey(args.avatarKey);
@@ -110,7 +110,7 @@ export const updateCurrentProfile = mutation({
     });
 
     const updatedPlayer = await ctx.db.get(player._id);
-    if (!updatedPlayer) throw new Error("Player record not found after update.");
+    if (!updatedPlayer) throw new ConvexError("Player record not found after update.");
     return updatedPlayer;
   },
 });

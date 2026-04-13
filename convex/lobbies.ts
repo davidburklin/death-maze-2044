@@ -1,5 +1,5 @@
 import { mutation, query } from "./_generated/server";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 
@@ -15,7 +15,7 @@ type CurrentMemberContext = {
 
 async function getCurrentPlayerId(ctx: MutationCtx | QueryCtx): Promise<Id<"players">> {
   const identity = await ctx.auth.getUserIdentity();
-  if (!identity) throw new Error("Not authenticated");
+  if (!identity) throw new ConvexError("Not authenticated");
 
   const identityRow = await ctx.db
     .query("identities")
@@ -24,7 +24,7 @@ async function getCurrentPlayerId(ctx: MutationCtx | QueryCtx): Promise<Id<"play
     )
     .unique();
 
-  if (!identityRow) throw new Error("Player record not found. Call ensureCurrentPlayer first.");
+  if (!identityRow) throw new ConvexError("Player record not found. Call ensureCurrentPlayer first.");
   return identityRow.playerId;
 }
 
@@ -45,7 +45,7 @@ async function getCurrentLobbyContext(
     }
   }
 
-  throw new Error("No active lobby membership found.");
+  throw new ConvexError("No active lobby membership found.");
 }
 
 // Lists all lobbies currently accepting players.
@@ -67,7 +67,7 @@ export const create = mutation({
   },
   handler: async (ctx, args): Promise<Id<"lobbies">> => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Not authenticated");
+    if (!identity) throw new ConvexError("Not authenticated");
 
     const identityRow = await ctx.db
       .query("identities")
@@ -75,11 +75,11 @@ export const create = mutation({
         q.eq("tokenIdentifier", identity.tokenIdentifier),
       )
       .unique();
-    if (!identityRow) throw new Error("Player record not found. Call ensureCurrentPlayer first.");
+    if (!identityRow) throw new ConvexError("Player record not found. Call ensureCurrentPlayer first.");
 
     const now = Date.now();
     if (args.maxPlayers < 2 || args.maxPlayers > DEFAULT_MAX_PLAYERS) {
-      throw new Error(`Lobby size must be between 2 and ${DEFAULT_MAX_PLAYERS} players.`);
+      throw new ConvexError(`Lobby size must be between 2 and ${DEFAULT_MAX_PLAYERS} players.`);
     }
 
     const lobbyId = await ctx.db.insert("lobbies", {
@@ -145,7 +145,7 @@ export const ensureJoinedDefaultLobby = mutation({
       });
 
       targetLobby = await ctx.db.get(lobbyId);
-      if (!targetLobby) throw new Error("Failed to create lobby.");
+      if (!targetLobby) throw new ConvexError("Failed to create lobby.");
     }
 
     const existingMembership = await ctx.db
@@ -292,7 +292,7 @@ export const sendCurrentPlayerMessage = mutation({
     const body = args.body.trim();
 
     if (body.length < 1 || body.length > 300) {
-      throw new Error("Message must be between 1 and 300 characters.");
+      throw new ConvexError("Message must be between 1 and 300 characters.");
     }
 
     await ctx.db.insert("lobbyMessages", {
