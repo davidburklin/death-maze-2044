@@ -253,7 +253,14 @@
 
 <script setup lang="ts">
 import { api } from '../../convex/_generated/api'
+import { ConvexError } from 'convex/values'
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+
+function extractErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof ConvexError) return String(error.data)
+  if (error instanceof Error) return error.message
+  return fallback
+}
 
 interface AvatarResponse {
   avatars: string[]
@@ -379,7 +386,7 @@ const loadLobbyView = async (): Promise<void> => {
     lobbyView.value = await convexClient.query(api.lobbies.getCurrentLobbyView, {}) as LobbyView
   }
   catch (error) {
-    lobbyErrorMessage.value = error instanceof Error ? error.message : 'Failed to load lobby.'
+    lobbyErrorMessage.value = extractErrorMessage(error, 'Failed to load lobby.')
   }
 }
 
@@ -446,7 +453,7 @@ const saveProfile = async (): Promise<void> => {
     await initialize()
   }
   catch (error) {
-    profileErrorMessage.value = error instanceof Error ? error.message : 'Failed to save profile.'
+    profileErrorMessage.value = extractErrorMessage(error, 'Failed to save profile.')
   }
   finally {
     isSavingProfile.value = false
@@ -468,7 +475,7 @@ const sendMessage = async (): Promise<void> => {
     await loadLobbyView()
   }
   catch (error) {
-    lobbyErrorMessage.value = error instanceof Error ? error.message : 'Failed to send message.'
+    lobbyErrorMessage.value = extractErrorMessage(error, 'Failed to send message.')
   }
   finally {
     isSendingMessage.value = false
@@ -488,7 +495,7 @@ const toggleReady = async (): Promise<void> => {
     await loadLobbyView()
   }
   catch (error) {
-    lobbyErrorMessage.value = error instanceof Error ? error.message : 'Failed to update ready state.'
+    lobbyErrorMessage.value = extractErrorMessage(error, 'Failed to update ready state.')
   }
   finally {
     isUpdatingReady.value = false
@@ -513,7 +520,7 @@ const initializeAuthenticatedExperience = async (): Promise<void> => {
   }
   catch (error) {
     stopLobbyPolling()
-    const message = error instanceof Error ? error.message : 'Failed to initialize your lobby experience.'
+    const message = extractErrorMessage(error, 'Failed to initialize your lobby experience.')
 
     if (requiresProfileSetup.value) {
       profileErrorMessage.value = message

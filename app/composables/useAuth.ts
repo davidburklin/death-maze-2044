@@ -1,5 +1,12 @@
 import { api } from '../../convex/_generated/api'
+import { ConvexError } from 'convex/values'
 import type { GoogleCredentialResponse } from '~/types/google-identity'
+
+function extractErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof ConvexError) return String(error.data)
+  if (error instanceof Error) return error.message
+  return fallback
+}
 
 interface AuthUser {
   displayName: string
@@ -142,7 +149,7 @@ export const useAuth = () => {
     }
     catch (error) {
       signOut()
-      errorMessage.value = error instanceof Error ? error.message : 'Failed to complete sign-in.'
+      errorMessage.value = extractErrorMessage(error, 'Failed to complete sign-in.')
     }
     finally {
       isLoading.value = false
@@ -214,7 +221,7 @@ export const useAuth = () => {
     }
     catch (error) {
       signOut()
-      errorMessage.value = error instanceof Error ? error.message : 'Failed to restore signed-in session.'
+      errorMessage.value = extractErrorMessage(error, 'Failed to restore signed-in session.')
       isInitialized.value = true
     }
     finally {
