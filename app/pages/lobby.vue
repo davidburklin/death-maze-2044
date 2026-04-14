@@ -30,24 +30,6 @@
         </div>
 
         <div v-else class="mt-8 space-y-6">
-          <div class="rounded-2xl border border-white/15 bg-black/30 p-5">
-            <p class="text-sm text-neutral-300">Signed in as</p>
-            <div class="mt-3 flex items-center gap-3">
-              <div class="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-white/5">
-                <img
-                  v-if="user?.avatarUrl"
-                  :src="user.avatarUrl"
-                  :alt="user?.displayName"
-                  class="h-full w-full object-cover"
-                >
-                <span v-else class="text-sm font-semibold text-white">{{ getInitials(user?.displayName) }}</span>
-              </div>
-              <p class="text-lg font-semibold text-white">
-                {{ user?.displayName ?? 'Unknown Agent' }}
-              </p>
-            </div>
-          </div>
-
           <UAlert
             v-if="profileErrorMessage"
             color="error"
@@ -253,16 +235,6 @@
             </div>
           </div>
 
-          <UButton
-            color="neutral"
-            variant="soft"
-            icon="i-lucide-log-out"
-            :loading="isSigningOut"
-            :disabled="isSigningOut"
-            @click="handleManualSignOut"
-          >
-            Sign out
-          </UButton>
         </div>
       </section>
     </UPageBody>
@@ -272,7 +244,7 @@
 <script setup lang="ts">
 import { api } from '../../convex/_generated/api'
 import { ConvexError } from 'convex/values'
-import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, provide, reactive, ref, watch } from 'vue'
 
 const CHAT_BOTTOM_THRESHOLD_PX = 48
 const CHAT_PAGE_SIZE = 5
@@ -370,7 +342,6 @@ const typingIndicatorText = computed<string | null>(() => {
 const {
   isAuthenticated,
   isLoading,
-  user,
   errorMessage,
   initialize,
   renderGoogleButton,
@@ -504,6 +475,8 @@ const handleManualSignOut = async (): Promise<void> => {
   signOut()
   await navigateTo('/farewell')
 }
+
+provide('lobbySignOut', handleManualSignOut)
 
 const startLobbyPolling = (): void => {
   stopLobbyPolling()

@@ -5,9 +5,10 @@
         <p class="dm-kicker">Live Transmission</p>
         <h1 class="dm-heading text-4xl md:text-6xl">Death Maze 2044</h1>
         <p class="mt-4 max-w-3xl text-base leading-relaxed text-neutral-200/90 md:text-lg">
-          A real-time multiplayer survival game. Survive the horrors within the maze long
-          enough to escape, or meet your expected death. Real-time exploration with hybrid
-          turn-based combat.
+          Death Maze 2044 drops you into a real-time multiplayer nightmare where survival 
+          is never guaranteed. Navigate a deadly maze, face the horrors lurking within, 
+          and battle your way out through a tense mix of real-time exploration and 
+          hybrid turn-based combat.
         </p>
 
         <UAlert
