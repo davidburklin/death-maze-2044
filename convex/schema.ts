@@ -62,8 +62,10 @@ export default defineSchema({
     characterId: v.optional(v.id("characters")),
     isReady: v.boolean(),
     joinedAt: v.number(),
+    lastActivityAt: v.optional(v.number()),
   })
     .index("by_lobby", ["lobbyId"])
+    .index("by_last_activity_at", ["lastActivityAt"])
     .index("by_player", ["playerId"])
     .index("by_lobby_and_player", ["lobbyId", "playerId"]),
 

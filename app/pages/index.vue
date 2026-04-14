@@ -10,6 +10,15 @@
           turn-based combat.
         </p>
 
+        <UAlert
+          v-if="timedOutMessage"
+          class="mt-6"
+          color="warning"
+          variant="soft"
+          title="Returned From The Maze"
+          :description="timedOutMessage"
+        />
+
         <div class="dm-crawl-shell mt-8">
           <div class="dm-crawl-stage">
             <div
@@ -66,11 +75,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { heroCrawlLines } from '~/content/story'
+
+const DEFAULT_TIMEOUT_MESSAGE = 'while you were napping, you were fed to the maze. Try again.'
 
 const isCrawlPaused = ref(false)
 const crawlReplaySeed = ref(0)
+const route = useRoute()
+
+const timedOutMessage = computed<string | null>(() => {
+  if (route.query.timedOut !== '1') return null
+
+  const message = route.query.message
+  return typeof message === 'string' && message.length > 0 ? message : DEFAULT_TIMEOUT_MESSAGE
+})
 
 const replayCrawl = (): void => {
   crawlReplaySeed.value += 1

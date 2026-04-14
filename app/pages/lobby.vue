@@ -136,9 +136,25 @@
                 :description="lobbyErrorMessage"
               />
 
-              <div class="mt-4 h-[380px] overflow-y-auto rounded-xl border border-white/10 bg-black/40 p-3">
+              <div
+                ref="chatContainer"
+                class="mt-4 h-[380px] overflow-y-auto rounded-xl border border-white/10 bg-black/40 p-3"
+              >
+                <div v-if="hasMoreMessages" class="mb-3 flex justify-center">
+                  <UButton
+                    color="neutral"
+                    variant="ghost"
+                    size="sm"
+                    :loading="isLoadingMoreMessages"
+                    :disabled="isLoadingMoreMessages"
+                    @click="loadMoreMessages"
+                  >
+                    Load more
+                  </UButton>
+                </div>
+
                 <div
-                  v-for="message in lobbyView?.messages ?? []"
+                  v-for="message in chatMessages"
                   :key="message.id"
                   class="mb-3 rounded-lg border border-white/10 p-3"
                   :class="message.isSelf ? 'bg-emerald-500/10' : 'bg-white/5'"
@@ -159,7 +175,7 @@
                   <p class="mt-2 whitespace-pre-wrap text-sm text-white">{{ message.body }}</p>
                 </div>
 
-                <p v-if="(lobbyView?.messages.length ?? 0) === 0" class="text-sm text-neutral-400">
+                <p v-if="chatMessages.length === 0" class="text-sm text-neutral-400">
                   No messages yet. Start the conversation.
                 </p>
               </div>
@@ -241,7 +257,9 @@
             color="neutral"
             variant="soft"
             icon="i-lucide-log-out"
-            @click="signOut"
+            :loading="isSigningOut"
+            :disabled="isSigningOut"
+            @click="handleManualSignOut"
           >
             Sign out
           </UButton>
@@ -254,7 +272,15 @@
 <script setup lang="ts">
 import { api } from '../../convex/_generated/api'
 import { ConvexError } from 'convex/values'
-import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+
+const CHAT_BOTTOM_THRESHOLD_PX = 48
+const CHAT_PAGE_SIZE = 5
+const LOBBY_TIMEOUT_REDIRECT_MESSAGE = 'while you were napping, you were fed to the maze. Try again.'
+const LOBBY_TIMEOUT_ERRORS = new Set([
+  'Lobby session timed out.',
+  'No active lobby membership found.',
+])
 
 function extractErrorMessage(error: unknown, fallback: string): string {
   if (error instanceof ConvexError) return String(error.data)
@@ -279,21 +305,29 @@ interface LobbyView {
     isReady: boolean
     isSelf: boolean
   }>
-  messages: Array<{
-    id: string
-    playerId: string
-    senderName: string
-    senderAvatarUrl: string | null
-    body: string
-    createdAt: number
-    isSelf: boolean
-  }>
   typingDisplayNames: string[]
   allReady: boolean
   selfReady: boolean
 }
 
+interface LobbyMessage {
+  id: string
+  playerId: string
+  senderName: string
+  senderAvatarUrl: string | null
+  body: string
+  createdAt: number
+  isSelf: boolean
+}
+
+interface LobbyMessagePage {
+  page: LobbyMessage[]
+  isDone: boolean
+  continueCursor: string
+}
+
 const googleButtonContainer = ref<HTMLElement | null>(null)
+const chatContainer = ref<HTMLElement | null>(null)
 const convexClient = useConvexClient()
 
 const avatarOptions = ref<string[]>([])
@@ -303,11 +337,18 @@ const lobbyErrorMessage = ref<string | null>(null)
 const isSavingProfile = ref<boolean>(false)
 const isUpdatingReady = ref<boolean>(false)
 const isSendingMessage = ref<boolean>(false)
+const isLoadingMoreMessages = ref<boolean>(false)
+const isSigningOut = ref<boolean>(false)
 const lobbyView = ref<LobbyView | null>(null)
+const chatMessages = ref<LobbyMessage[]>([])
 const chatInput = ref<string>('')
 const refreshTimer = ref<number | null>(null)
 const typingIdleTimer = ref<number | null>(null)
 const typingState = ref<boolean>(false)
+const hasMoreMessages = ref<boolean>(false)
+const messageHistoryCursor = ref<string | null>(null)
+const newestLoadedMessageCreatedAt = ref<number | null>(null)
+const isHandlingLobbyExit = ref<boolean>(false)
 
 const profileForm = reactive({
   lobbyName: '',
@@ -336,6 +377,53 @@ const {
   signOut,
 } = useAuth()
 
+const resetChatState = (anchorTimestamp = Date.now()): void => {
+  chatMessages.value = []
+  hasMoreMessages.value = false
+  messageHistoryCursor.value = null
+  newestLoadedMessageCreatedAt.value = anchorTimestamp
+}
+
+const isChatNearBottom = (): boolean => {
+  const container = chatContainer.value
+  if (!container) return true
+
+  const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight
+  return distanceFromBottom <= CHAT_BOTTOM_THRESHOLD_PX
+}
+
+const scrollChatToBottom = async (): Promise<void> => {
+  await nextTick()
+
+  const container = chatContainer.value
+  if (!container) return
+
+  container.scrollTop = container.scrollHeight
+}
+
+const mergeMessages = (messages: LobbyMessage[]): LobbyMessage[] => {
+  const uniqueMessages = new Map<string, LobbyMessage>()
+
+  for (const message of messages) {
+    uniqueMessages.set(message.id, message)
+  }
+
+  return Array.from(uniqueMessages.values()).sort((left, right) => {
+    if (left.createdAt !== right.createdAt) {
+      return left.createdAt - right.createdAt
+    }
+
+    return left.id.localeCompare(right.id)
+  })
+}
+
+const updateNewestLoadedMessageAnchor = (): void => {
+  const newestMessage = chatMessages.value.at(-1)
+  if (!newestMessage) return
+
+  newestLoadedMessageCreatedAt.value = newestMessage.createdAt
+}
+
 const stopLobbyPolling = (): void => {
   if (refreshTimer.value !== null) {
     window.clearInterval(refreshTimer.value)
@@ -343,18 +431,85 @@ const stopLobbyPolling = (): void => {
   }
 }
 
-const startLobbyPolling = (): void => {
-  stopLobbyPolling()
-  refreshTimer.value = window.setInterval(() => {
-    void loadLobbyView()
-  }, 2500)
-}
-
 const clearTypingTimer = (): void => {
   if (typingIdleTimer.value !== null) {
     window.clearTimeout(typingIdleTimer.value)
     typingIdleTimer.value = null
   }
+}
+
+const beginLobbyExit = (): void => {
+  isHandlingLobbyExit.value = true
+  stopLobbyPolling()
+  clearTypingTimer()
+  typingState.value = false
+  lobbyErrorMessage.value = null
+  lobbyView.value = null
+  chatInput.value = ''
+  resetChatState()
+}
+
+const handleLobbySessionLoss = async (reason: 'auth' | 'timeout'): Promise<void> => {
+  if (isHandlingLobbyExit.value) return
+
+  beginLobbyExit()
+  signOut()
+
+  if (reason === 'timeout') {
+    await navigateTo({
+      path: '/',
+      query: {
+        timedOut: '1',
+        message: LOBBY_TIMEOUT_REDIRECT_MESSAGE,
+      },
+    })
+    return
+  }
+
+  await navigateTo('/')
+}
+
+const handleLobbyDataError = async (error: unknown, fallback: string): Promise<boolean> => {
+  const message = extractErrorMessage(error, fallback)
+
+  if (LOBBY_TIMEOUT_ERRORS.has(message)) {
+    await handleLobbySessionLoss('timeout')
+    return true
+  }
+
+  if (message === 'Not authenticated') {
+    await handleLobbySessionLoss('auth')
+    return true
+  }
+
+  lobbyErrorMessage.value = message
+  return false
+}
+
+const handleManualSignOut = async (): Promise<void> => {
+  if (isSigningOut.value) return
+
+  isSigningOut.value = true
+  beginLobbyExit()
+
+  try {
+    if (!requiresProfileSetup.value) {
+      await convexClient.mutation(api.lobbies.leaveCurrentLobby, {})
+    }
+  }
+  catch {
+    // Best effort: if the leave call fails, the inactivity cleanup will still reclaim the slot.
+  }
+
+  signOut()
+  await navigateTo('/farewell')
+}
+
+const startLobbyPolling = (): void => {
+  stopLobbyPolling()
+  refreshTimer.value = window.setInterval(() => {
+    void refreshLobbyState()
+  }, 2500)
 }
 
 const mountGoogleButton = async (): Promise<void> => {
@@ -380,14 +535,120 @@ const loadCurrentPlayerProfile = async (): Promise<void> => {
   requiresProfileSetup.value = !currentPlayer.lobbyName || !currentPlayer.avatarKey
 }
 
-const loadLobbyView = async (): Promise<void> => {
+const loadLobbyView = async (): Promise<boolean> => {
   try {
     lobbyErrorMessage.value = null
     lobbyView.value = await convexClient.query(api.lobbies.getCurrentLobbyView, {}) as LobbyView
+    return true
   }
   catch (error) {
-    lobbyErrorMessage.value = extractErrorMessage(error, 'Failed to load lobby.')
+    await handleLobbyDataError(error, 'Failed to load lobby.')
+    return false
   }
+}
+
+const loadInitialMessages = async (): Promise<boolean> => {
+  const requestStartedAt = Date.now()
+
+  try {
+    const initialPage = await convexClient.query(api.lobbies.listCurrentLobbyMessages, {
+      paginationOpts: {
+        cursor: null,
+        numItems: CHAT_PAGE_SIZE,
+      },
+    }) as LobbyMessagePage
+
+    chatMessages.value = initialPage.page
+    hasMoreMessages.value = !initialPage.isDone
+    messageHistoryCursor.value = initialPage.continueCursor
+    newestLoadedMessageCreatedAt.value = initialPage.page.length > 0
+      ? initialPage.page[initialPage.page.length - 1]?.createdAt ?? requestStartedAt
+      : requestStartedAt
+
+    await scrollChatToBottom()
+    return true
+  }
+  catch (error) {
+    await handleLobbyDataError(error, 'Failed to load chat history.')
+    return false
+  }
+}
+
+const loadMoreMessages = async (): Promise<void> => {
+  if (!hasMoreMessages.value || !messageHistoryCursor.value) return
+
+  isLoadingMoreMessages.value = true
+  lobbyErrorMessage.value = null
+
+  const previousScrollHeight = chatContainer.value?.scrollHeight ?? 0
+  const previousScrollTop = chatContainer.value?.scrollTop ?? 0
+
+  try {
+    const olderPage = await convexClient.query(api.lobbies.listCurrentLobbyMessages, {
+      paginationOpts: {
+        cursor: messageHistoryCursor.value,
+        numItems: CHAT_PAGE_SIZE,
+      },
+    }) as LobbyMessagePage
+
+    chatMessages.value = mergeMessages([...olderPage.page, ...chatMessages.value])
+    hasMoreMessages.value = !olderPage.isDone
+    messageHistoryCursor.value = olderPage.continueCursor
+
+    await nextTick()
+
+    const container = chatContainer.value
+    if (container) {
+      container.scrollTop = previousScrollTop + (container.scrollHeight - previousScrollHeight)
+    }
+  }
+  catch (error) {
+    await handleLobbyDataError(error, 'Failed to load older messages.')
+  }
+  finally {
+    isLoadingMoreMessages.value = false
+  }
+}
+
+const loadNewMessages = async (forceScroll = false): Promise<boolean> => {
+  if (newestLoadedMessageCreatedAt.value === null) {
+    newestLoadedMessageCreatedAt.value = Date.now()
+  }
+
+  const shouldStickToBottom = forceScroll || isChatNearBottom()
+
+  try {
+    const recentMessages = await convexClient.query(api.lobbies.listCurrentLobbyMessagesSince, {
+      afterCreatedAt: newestLoadedMessageCreatedAt.value,
+    }) as LobbyMessage[]
+
+    const knownIds = new Set(chatMessages.value.map(message => message.id))
+    const unseenMessages = recentMessages.filter(message => !knownIds.has(message.id))
+
+    if (unseenMessages.length === 0) {
+      return true
+    }
+
+    chatMessages.value = mergeMessages([...chatMessages.value, ...unseenMessages])
+    updateNewestLoadedMessageAnchor()
+
+    if (shouldStickToBottom) {
+      await scrollChatToBottom()
+    }
+
+    return true
+  }
+  catch (error) {
+    await handleLobbyDataError(error, 'Failed to refresh chat.')
+    return false
+  }
+}
+
+const refreshLobbyState = async (): Promise<void> => {
+  const loadedLobby = await loadLobbyView()
+  if (!loadedLobby) return
+
+  await loadNewMessages()
 }
 
 const formatMessageTime = (timestamp: number): string => {
@@ -431,8 +692,15 @@ const scheduleTypingIdleReset = (): void => {
 }
 
 const initializeLobby = async (): Promise<void> => {
+  resetChatState()
   await convexClient.mutation(api.lobbies.ensureJoinedDefaultLobby, {})
-  await loadLobbyView()
+
+  const lobbyLoaded = await loadLobbyView()
+  if (!lobbyLoaded) return
+
+  const messagesLoaded = await loadInitialMessages()
+  if (!messagesLoaded) return
+
   startLobbyPolling()
 }
 
@@ -472,10 +740,10 @@ const sendMessage = async (): Promise<void> => {
     chatInput.value = ''
     clearTypingTimer()
     await sendTypingState(false)
-    await loadLobbyView()
+    await loadNewMessages(true)
   }
   catch (error) {
-    lobbyErrorMessage.value = extractErrorMessage(error, 'Failed to send message.')
+    await handleLobbyDataError(error, 'Failed to send message.')
   }
   finally {
     isSendingMessage.value = false
@@ -495,7 +763,7 @@ const toggleReady = async (): Promise<void> => {
     await loadLobbyView()
   }
   catch (error) {
-    lobbyErrorMessage.value = extractErrorMessage(error, 'Failed to update ready state.')
+    await handleLobbyDataError(error, 'Failed to update ready state.')
   }
   finally {
     isUpdatingReady.value = false
@@ -513,6 +781,7 @@ const initializeAuthenticatedExperience = async (): Promise<void> => {
 
     if (requiresProfileSetup.value) {
       stopLobbyPolling()
+      resetChatState()
       return
     }
 
@@ -557,14 +826,23 @@ watch(chatInput, (nextValue) => {
 watch(isAuthenticated, async (authed) => {
   if (authed) {
     await initializeAuthenticatedExperience()
+    return
   }
-  else {
-    stopLobbyPolling()
-    clearTypingTimer()
+
+  stopLobbyPolling()
+  clearTypingTimer()
+
+  if (!isHandlingLobbyExit.value) {
     void sendTypingState(false)
-    lobbyView.value = null
-    requiresProfileSetup.value = false
-    chatInput.value = ''
+  }
+
+  lobbyView.value = null
+  requiresProfileSetup.value = false
+  chatInput.value = ''
+  isSigningOut.value = false
+  resetChatState()
+
+  if (!isHandlingLobbyExit.value) {
     await mountGoogleButton()
   }
 })
@@ -572,6 +850,9 @@ watch(isAuthenticated, async (authed) => {
 onBeforeUnmount(() => {
   stopLobbyPolling()
   clearTypingTimer()
-  void sendTypingState(false)
+
+  if (!isHandlingLobbyExit.value) {
+    void sendTypingState(false)
+  }
 })
 </script>
