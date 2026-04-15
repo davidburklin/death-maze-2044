@@ -27,12 +27,11 @@ export default defineSchema({
     playerId: v.id("players"),
     slotIndex: v.number(),
     archetype: v.string(),
-    stats: v.object({
-      health: v.number(),
-      maxHealth: v.number(),
-      attack: v.number(),
-      defense: v.number(),
-      speed: v.number(),
+    attributes: v.object({
+      strength: v.number(),
+      perception: v.number(),
+      agility: v.number(),
+      intelligence: v.number(),
     }),
     inventory: v.array(v.string()),
     progression: v.object({
