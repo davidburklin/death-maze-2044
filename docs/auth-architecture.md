@@ -57,7 +57,19 @@ Never store:
 - `playerId`
 - `slotIndex`
 - `archetype`
-- `stats`
+- `attributes`
+	- Base value: all attributes start at `1`
+	- Creation rule: the Regime allows the entrant to choose one survival bias configuration, increasing one attribute by `1` during character creation
+	- Implant rule: each character carries a standard cyber implant with four graft ports
+	- Upgrade rule: each splice module found in the Maze raises one chosen attribute by `1` when installed into a graft port
+	- Allocation rule: graft ports may all feed one attribute or be mixed across attributes in any combination
+	- Practical maximum: `6` in a single attribute from base `1`, one survival bias bonus, and four installed splice modules
+	- Persistence rule: installed splice modules occupy their graft ports, but the design does not treat them as permanently locked; no removal or reconfiguration mechanic is defined for the first playable
+	- `strength`: each point above base `1` adds `10%` to the weapon's base melee damage
+	- `perception`: each point above base `1` adds `10%` to the chance to spot items, traps, and other points of interest
+	- `agility`: each point above base `1` adds `10%` dodge chance and `5%` damage reduction against incoming attacks
+	- `intelligence`: each point above base `1` adds `10%` to reasoning-heavy puzzle checks
+	- Scaling rule: bonuses stack linearly above base `1` until all four graft ports are filled
 - `inventory`
 - `progression`
 

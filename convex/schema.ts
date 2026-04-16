@@ -27,12 +27,11 @@ export default defineSchema({
     playerId: v.id("players"),
     slotIndex: v.number(),
     archetype: v.string(),
-    stats: v.object({
-      health: v.number(),
-      maxHealth: v.number(),
-      attack: v.number(),
-      defense: v.number(),
-      speed: v.number(),
+    attributes: v.object({
+      strength: v.number(),
+      perception: v.number(),
+      agility: v.number(),
+      intelligence: v.number(),
     }),
     inventory: v.array(v.string()),
     progression: v.object({
@@ -62,8 +61,10 @@ export default defineSchema({
     characterId: v.optional(v.id("characters")),
     isReady: v.boolean(),
     joinedAt: v.number(),
+    lastActivityAt: v.optional(v.number()),
   })
     .index("by_lobby", ["lobbyId"])
+    .index("by_last_activity_at", ["lastActivityAt"])
     .index("by_player", ["playerId"])
     .index("by_lobby_and_player", ["lobbyId", "playerId"]),
 
