@@ -258,8 +258,22 @@ Identity model:
 Data to store in Convex:
 - `players`: displayName, avatarUrl, createdAt, lastSeenAt
 - `identities`: playerId, provider, providerSubject, email, linkedAt
-- `characters`: playerId, slotIndex, archetype, stats, inventory, progression
+- `characters`: playerId, slotIndex, archetype, attributes, inventory, progression
 - `sessions`: lobby membership and active run participation
+
+Character attributes for the first playable:
+- All characters start with a base value of `1` in each attribute.
+- At character creation, the Regime allows the entrant to choose one survival bias configuration, increasing one attribute by `1`.
+- Each character carries a standard cyber implant with four graft ports.
+- Splice modules can be found in the Maze. Installing a splice module into a graft port increases one chosen attribute by `1`.
+- Graft ports may all be committed to one attribute or split across multiple attributes in any combination.
+- This creates a practical attribute maximum of `6`: base `1`, one survival bias bonus, and four installed splice modules.
+- Installed splice modules occupy their graft ports, but the system is not intended to imply permanent lock-in. No removal or reconfiguration mechanic is defined for the first playable.
+- `strength`: each point above base `1` adds `10%` to the weapon's base melee damage.
+- `perception`: each point above base `1` adds `10%` to the chance to spot items, traps, and other points of interest.
+- `agility`: each point above base `1` adds `10%` dodge chance and `5%` damage reduction against incoming attacks.
+- `intelligence`: each point above base `1` adds `10%` to reasoning-heavy puzzle checks.
+- Attribute bonuses scale linearly above base `1` until all four graft ports are filled.
 
 Account linking rules:
 - Multi-provider linking is not required for the first playable milestone.
