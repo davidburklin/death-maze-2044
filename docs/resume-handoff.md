@@ -1,14 +1,15 @@
 # Resume Handoff
 
-Last updated: 2026-03-27
+Last updated: 2026-04-16
 
 ## Current State
 
-- Strategic architecture and phased plan are documented.
-- Phaser remains the selected primary graphics path, with a fallback tactical renderer for debugging and low-end support.
-- OAuth-only identity strategy is selected, with Google as the only required provider for the first playable milestone.
-- No Convex scaffolding or gameplay code has been implemented in this repo yet.
-- The app shell still uses starter branding and should be replaced early.
+- Current branch target: `feature/chasing-mvp-1`.
+- MVP-1 is scoped to `lobby -> character creation -> empty maze exploration`.
+- Nuxt, Convex, Google auth, lobby profile setup, lobby chat, member presence, and ready/unready state are already present.
+- Shared deterministic RNG, world generation, world validation, objective-state primitives, and combat turn primitives are already present.
+- Combat primitives remain available, but combat is deferred until after MVP-1.
+- Itemization, enemies, objectives, Phaser production rendering, telemetry, and reconnect polish are deferred.
 
 ## Key Planning Docs
 
@@ -18,25 +19,28 @@ Last updated: 2026-03-27
 - [docs/homepage-ia.md](./homepage-ia.md)
 - [docs/legacy-port-notes.md](./legacy-port-notes.md)
 
-## Recommended First Coding Session
+## Recommended Next Coding Session
 
-1. Install dependencies and add `lint`, `typecheck`, `test`, and `build` scripts.
-2. Add Vitest and a minimal CI workflow so verification exists before feature work.
-3. Scaffold Convex plus initial `players` and `identities` schema files.
-4. Implement Google auth wiring end-to-end.
-5. Create `shared/game` domain type and deterministic utility placeholders.
-6. Replace the starter home page and default layout shell with Death Maze branding.
+Start with Step 2 in [docs/execution-checklist.md](./execution-checklist.md):
+
+1. Define the MVP character-creation contract.
+2. Add a character creation screen or route reached after readying up.
+3. Implement survival-bias validation: base `1` in every attribute, plus `1` to exactly one chosen attribute.
+4. Add `Unready` to return to lobby and clear ready state.
+5. Add disabled-until-valid `Enter Maze`.
+6. Add Convex character mutation/query support.
 
 ## Session Re-entry Prompt
 
 Use this prompt on return:
 
-"Continue Death Maze 2044 from docs/execution-checklist.md. Start with Phase 0: add scripts and CI, scaffold Convex, wire Google auth, create shared/game domain types, and replace the starter home page shell."
+"Continue Death Maze 2044 from docs/execution-checklist.md on branch feature/chasing-mvp-1. Start with Step 2: character creation contract for MVP-1, then proceed toward enterMaze and empty-maze movement."
 
 ## Exit Criteria For Next Work Block
 
-- Local dev starts with no blocking type errors.
-- `bun run lint`, `bun run typecheck`, `bun run test`, and `bun run build` pass.
-- Google sign-in path is wired end-to-end.
-- Home page and default layout no longer use starter branding.
-- Baseline Convex schema files are committed.
+- Ready players can reach character creation.
+- Character creation validates the MVP attribute rules.
+- `Unready` returns to lobby and clears ready state.
+- `Enter Maze` is present but only enabled for a valid character.
+- Any new character logic has deterministic tests where practical.
+- `bun run lint`, `bun run typecheck`, `bun run test`, and `bun run build` remain the release gate.

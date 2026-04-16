@@ -1,6 +1,6 @@
 # Authentication Architecture
 
-Last updated: 2026-03-27
+Last updated: 2026-04-16
 Status: Approved for implementation
 
 ## Decision
@@ -8,7 +8,7 @@ Status: Approved for implementation
 Use external OAuth and OpenID providers for authentication and do not maintain local password accounts.
 
 Provider rollout:
-1. Google is required for Phase 0 and the first playable milestone.
+1. Google is required for MVP-1.
 2. Discord is the only secondary provider under consideration after the first closed playtest.
 3. No third provider is planned before usage data justifies the added scope.
 
@@ -57,21 +57,26 @@ Never store:
 - `playerId`
 - `slotIndex`
 - `archetype`
+- `survivalBias`
 - `attributes`
 	- Base value: all attributes start at `1`
-	- Creation rule: the Regime allows the entrant to choose one survival bias configuration, increasing one attribute by `1` during character creation
-	- Implant rule: each character carries a standard cyber implant with four graft ports
-	- Upgrade rule: each splice module found in the Maze raises one chosen attribute by `1` when installed into a graft port
-	- Allocation rule: graft ports may all feed one attribute or be mixed across attributes in any combination
-	- Practical maximum: `6` in a single attribute from base `1`, one survival bias bonus, and four installed splice modules
-	- Persistence rule: installed splice modules occupy their graft ports, but the design does not treat them as permanently locked; no removal or reconfiguration mechanic is defined for the first playable
+	- MVP-1 creation rule: the Regime allows the entrant to choose one survival bias configuration, increasing exactly one attribute by `1` during character creation
+	- MVP-1 implant rule: each character carries a standard cyber implant with four graft ports as story material only
+	- MVP-1 progression rule: no splice modules are found, installed, removed, or reconfigured
 	- `strength`: each point above base `1` adds `10%` to the weapon's base melee damage
 	- `perception`: each point above base `1` adds `10%` to the chance to spot items, traps, and other points of interest
 	- `agility`: each point above base `1` adds `10%` dodge chance and `5%` damage reduction against incoming attacks
 	- `intelligence`: each point above base `1` adds `10%` to reasoning-heavy puzzle checks
-	- Scaling rule: bonuses stack linearly above base `1` until all four graft ports are filled
+	- MVP-1 usage rule: attribute bonuses are displayed and stored, but combat, item, trap, and puzzle systems do not consume them yet
 - `inventory`
 - `progression`
+
+Post-MVP character progression:
+- Upgrade rule: each splice module found in the Maze raises one chosen attribute by `1` when installed into a graft port.
+- Allocation rule: graft ports may all feed one attribute or be mixed across attributes in any combination.
+- Practical maximum: `6` in a single attribute from base `1`, one survival bias bonus, and four installed splice modules.
+- Persistence rule: installed splice modules occupy their graft ports, but the design does not treat them as permanently locked; no removal or reconfiguration mechanic is defined yet.
+- Scaling rule: bonuses stack linearly above base `1` until all four graft ports are filled.
 
 Constraints:
 - Unique index on (`provider`, `providerSubject`)
@@ -79,14 +84,14 @@ Constraints:
 
 ## Account Linking Strategy
 
-- Account linking is not required for the first playable milestone.
+- Account linking is not required for MVP-1.
 - If a second provider is added later, one internal player may link multiple providers.
 - Linking must require an already authenticated session on the target player account.
 - Provider-specific identifiers remain isolated in `identities`, never in `players`.
 
 ## Environment Variables
 
-Required for Phase 0 and first playable:
+Required for MVP-1:
 - `NUXT_PUBLIC_CONVEX_URL`
 - `CONVEX_DEPLOYMENT`
 - `AUTH_GOOGLE_CLIENT_ID`
@@ -118,13 +123,14 @@ Notes:
 - [ ] Data deletion request path defined.
 - [ ] Minimal scopes requested: `openid`, `profile`, `email`.
 
-## Implementation Sequence
+## MVP-1 Implementation Sequence
 
 1. Integrate Google provider and verify local callback flow.
 2. Add Convex identity mapping plus player bootstrap mutation.
 3. Add auth guard composable for protected pages.
 4. Add sign-out flow and token expiry handling.
-5. Re-evaluate Discord only after the first playtest and update this decision record if scope changes.
+5. Add MVP character creation after lobby ready state.
+6. Re-evaluate Discord only after the first playtest and update this decision record if scope changes.
 
 ## Acceptance Criteria
 
@@ -132,3 +138,4 @@ Notes:
 - Returning sign-in maps to the same player record by provider subject.
 - Protected routes redirect unauthenticated users to sign-in.
 - Sign-out clears local session and protected state.
+- Ready player can create a valid MVP character before entering a run.

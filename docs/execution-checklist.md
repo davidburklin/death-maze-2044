@@ -1,192 +1,310 @@
 # Death Maze 2044 Execution Checklist
 
-Last updated: 2026-03-27
+Last updated: 2026-04-16
 Owner: TBD
 
 Purpose:
-- Convert the strategic plan into an execution checklist with concrete tasks, file targets, and acceptance tests.
+
+- Convert the MVP-1 plan into concrete tasks, file targets, and acceptance tests.
 
 Reference:
-- See [docs/implementation-plan.md](./implementation-plan.md) for architecture decisions.
 
-## Phase 0: Foundation Setup
+- See [docs/implementation-plan.md](./implementation-plan.md) for architecture decisions and post-MVP scope.
+
+## MVP-1 Definition
 
 Goal:
-- Stand up runtime foundations for Convex, Google auth, shared game modules, and baseline verification tooling.
+
+- Ship the smallest playable multiplayer proof: lobby -> character creation -> empty maze exploration.
+
+In scope:
+
+- Authenticated lobby entry.
+- Ready state routes players to character creation.
+- Valid character creation with base attributes and one survival-bias bonus.
+- `Unready` returns to lobby.
+- `Enter Maze` is disabled until character creation is valid.
+- First entrant creates a generated maze run when no active run has capacity.
+- Up to 5 players can enter the same active maze.
+- Each entrant is randomly assigned to one of 5 one-way entry points into a macro cell.
+- Empty-maze movement proves one-way and two-way passage behavior.
+
+Out of scope:
+
+- Items, splice-module discovery, inventory progression, and graft-port reconfiguration.
+- Enemies, encounters, combat, combat UI, rewards, and balancing.
+- Nexus-core objective completion, signal fragments, final-exit victory, and run completion.
+- Phaser production renderer, asset pipeline, telemetry, moderation, and reconnect hardening.
+
+## Current Baseline
+
+Foundation and logic already present:
+
+- [x] `package.json` includes `dev`, `build`, `generate`, `preview`, `lint`, `typecheck`, and `test`.
+- [x] Vitest configuration exists.
+- [x] CI workflow runs install, lint, typecheck, test, and build.
+- [x] Convex project scaffold exists.
+- [x] Google identity and Convex player bootstrap exist.
+- [x] Lobby profile setup exists.
+- [x] Lobby chat, active members, typing indicator, and ready/unready state exist.
+- [x] Shared deterministic RNG exists.
+- [x] Shared world generation and validation exist.
+- [x] Shared objective-state primitives exist.
+- [x] Shared combat turn primitives exist, but are deferred for MVP-1.
+
+Known stale docs to avoid:
+
+- Older references to "Phase 0" being unimplemented are obsolete.
+- Older first-playable references to combat are post-MVP for the current branch.
+
+## Step 1: Planning Alignment
+
+Goal:
+
+- Align docs around the narrowed MVP-1.
 
 Tasks:
-- [ ] Install project dependencies and confirm the starter app runs locally.
-- [ ] Add `lint`, `typecheck`, `test`, and `build` scripts to `package.json`.
-- [ ] Add Vitest configuration and a minimal test harness for shared modules.
-- [ ] Add CI workflow to run install, lint, typecheck, test, and build.
-- [ ] Add Convex dependencies and initialize Convex project files.
-- [ ] Configure local and Vercel environment variables for Convex and Google auth.
-- [ ] Add initial domain model files for world, player, session, and combat under `shared/game`.
-- [ ] Add auth integration shell for Google sign-in.
-- [ ] Replace starter branding on `/` and in the default layout.
-- [ ] Add project docs for environment setup and local bootstrap.
+
+- [x] Update implementation plan to define MVP-1 scope.
+- [x] Update execution checklist to focus on character creation, run entry, and empty-maze movement.
+- [x] Update resume handoff so future sessions start from the correct next task.
+- [x] Update auth architecture so splice-module progression is post-MVP.
 
 Suggested file targets:
-- `package.json`
-- `vitest.config.ts`
-- `.github/workflows/ci.yml`
+
+- `docs/implementation-plan.md`
+- `docs/execution-checklist.md`
+- `docs/resume-handoff.md`
+- `docs/auth-architecture.md`
+
+Acceptance tests:
+
+- [x] Docs describe `lobby -> character creation -> empty maze exploration`.
+- [x] Combat, itemization, enemies, and graphics production are explicitly deferred.
+
+## Step 2: Character Creation Contract
+
+Goal:
+
+- Let ready players create a valid MVP entrant before entering the maze.
+
+Tasks:
+
+- [ ] Decide whether character creation is a dedicated route or an in-lobby screen state.
+- [ ] Route ready players from lobby to character creation.
+- [ ] Add `Unready` action that clears ready state and returns to lobby.
+- [ ] Add `Enter Maze` action that remains disabled until the character is valid.
+- [ ] Define the MVP character shape shared by frontend and Convex.
+- [ ] Implement survival-bias choices that increase exactly one attribute by `1`.
+- [ ] Display the implant and survival-bias story material.
+- [ ] Persist or update the current player's MVP character.
+- [ ] Attach the valid character to the lobby member or upcoming run entry flow.
+
+Suggested file targets:
+
 - `convex/schema.ts`
-- `convex/players.ts`
-- `convex/identities.ts`
+- `convex/characters.ts`
 - `convex/lobbies.ts`
-- `convex/combat.ts`
-- `shared/game/types.ts`
-- `shared/game/random.ts`
-- `app/composables/useAuth.ts`
-- `.env.example`
-- `README.md`
-- `app/pages/index.vue`
-- `app/layouts/default.vue`
-
-Acceptance tests:
-- [ ] `bun install` succeeds.
-- [ ] `bun run dev` starts Nuxt successfully.
-- [ ] Convex local dev process can start and connect.
-- [ ] Google sign-in works in local dev.
-- [ ] `bun run lint`, `bun run typecheck`, `bun run test`, and `bun run build` all pass.
-- [ ] Starter branding is removed from the home page shell.
-
-## Phase 1: Deterministic Logic Port
-
-Goal:
-- Port legacy deterministic world logic without behavior drift.
-
-Tasks:
-- [ ] Port RNG utility and seed-based helpers into `shared/game`.
-- [ ] Port world generation logic and rename fantasy terms to 2044 terminology.
-- [ ] Port world validation and objective completion logic.
-- [ ] Add deterministic snapshot tests for fixed seeds.
-- [ ] Create or update `docs/legacy-port-notes.md` with subsystem contracts and intentional deviations.
-
-Suggested file targets:
-- `shared/game/random.ts`
-- `shared/game/world/generateWorld.ts`
-- `shared/game/world/validateWorld.ts`
-- `shared/game/objective/objectiveState.ts`
-- `shared/game/__tests__/world-seeds.test.ts`
-- `docs/legacy-port-notes.md`
-
-Acceptance tests:
-- [ ] Same seed always generates identical topology and objective data.
-- [ ] Validation rejects malformed worlds.
-- [ ] Objective completion logic matches expected contract behavior.
-- [ ] Local contract notes exist for each ported subsystem.
-
-## Phase 2: Multiplayer Core In Convex
-
-Goal:
-- Implement authoritative multiplayer state and action resolution.
-
-Tasks:
-- [ ] Define Convex tables and indexes for players, identities, lobbies, runs, combats, and action logs.
-- [ ] Implement lobby lifecycle mutations.
-- [ ] Implement run lifecycle mutations.
-- [ ] Implement exploration action mutations with legality checks.
-- [ ] Implement combat instance and turn action mutations.
-- [ ] Implement subscription queries for lobby, run, and combat real-time views.
-- [ ] Keep all authoritative legality and outcome resolution inside Convex.
-
-Suggested file targets:
-- `convex/schema.ts`
-- `convex/identities.ts`
-- `convex/lobbies.ts`
-- `convex/runs.ts`
-- `convex/exploration.ts`
-- `convex/combat.ts`
-- `convex/queries.ts`
-- `shared/game/combat/resolveRound.ts`
-
-Acceptance tests:
-- [ ] 2 to 5 clients can join one lobby and observe synchronized state updates.
-- [ ] Out-of-turn combat actions are rejected.
-- [ ] Invalid movement intents are rejected.
-- [ ] Repeated duplicate action submissions are idempotent.
-
-## Phase 3: First Playable Frontend
-
-Goal:
-- Deliver full user flow from home page to playable run.
-
-Tasks:
-- [ ] Replace starter index content with a marketing-first home page.
-- [ ] Add auth-aware CTA behavior.
-- [ ] Build lobby screen for create, join, and ready state.
-- [ ] Build active run page with exploration viewport and party state panels.
-- [ ] Build combat overlay with initiative, actions, and combat log.
-- [ ] Connect UI to Convex queries and mutations through composables and Pinia.
-
-Suggested file targets:
-- `app/pages/index.vue`
+- `shared/game/characters/types.ts`
+- `shared/game/characters/createCharacter.ts`
+- `shared/game/__tests__/characters.test.ts`
 - `app/pages/lobby.vue`
-- `app/pages/run/[runId].vue`
-- `app/pages/profile.vue`
-- `app/components/marketing/HomeHero.vue`
-- `app/components/marketing/CoreLoopCards.vue`
-- `app/components/marketing/HowItWorks.vue`
-- `app/components/marketing/HomeFooterLinks.vue`
-- `app/components/game/ExplorationViewport.vue`
-- `app/components/game/CombatPanel.vue`
-- `app/stores/gameSession.ts`
+- `app/pages/character/create.vue` or `app/components/game/CharacterCreationPanel.vue`
 - `app/composables/useGameSession.ts`
 
 Acceptance tests:
-- [ ] Anonymous user sees home page and sign-in CTA.
-- [ ] Authenticated user can create or join lobby.
-- [ ] Session transitions: lobby -> run -> combat -> exploration.
-- [ ] UI updates are live across multiple clients.
 
-## Phase 4: Graphics And Asset Pipeline
+- [ ] Ready player reaches character creation.
+- [ ] Base attributes are `1`.
+- [ ] Exactly one survival-bias attribute becomes `2`.
+- [ ] Invalid attribute payloads are rejected server-side.
+- [ ] `Enter Maze` is unavailable until the local form is valid.
+- [ ] `Unready` returns to lobby and clears ready state.
 
-Goal:
-- Implement Phaser renderer and production-ready asset delivery path.
-
-Tasks:
-- [ ] Integrate Phaser runtime into exploration and combat views.
-- [ ] Build sprite atlas manifest and loader.
-- [ ] Add interpolation and feedback effects for movement, hits, and status changes.
-- [ ] Implement fallback tactical renderer mode for debugging and low-end support.
-- [ ] Add performance budgets and measure frame pacing.
-
-Suggested file targets:
-- `app/components/game/PhaserViewport.vue`
-- `app/composables/usePhaserGame.ts`
-- `app/utils/assets/manifest.ts`
-- `public/assets/manifest.json`
-- `app/components/game/FallbackTacticalView.vue`
-
-Acceptance tests:
-- [ ] Stable rendering under expected client load.
-- [ ] Asset version updates invalidate cache correctly.
-- [ ] Fallback view can be toggled and remains functional.
-
-## Phase 5: Hardening And Live Readiness
+## Step 3: Active Run Data Model
 
 Goal:
-- Improve reliability, balance, and operational visibility.
+
+- Represent empty maze runs and run membership in Convex.
 
 Tasks:
-- [ ] Add reconnect and session resume handling.
-- [ ] Add telemetry and diagnostics for state transition failures.
-- [ ] Tune encounter rates, enemy balance, and rewards.
-- [ ] Add moderation and abuse safeguards for lobby and player interactions.
-- [ ] Decide whether a second auth provider is justified after playtest metrics.
-- [ ] Write release checklist and rollback playbook.
+
+- [ ] Add `runs` table.
+- [ ] Add `runMembers` table.
+- [ ] Add indexes for active run lookup and player active membership lookup.
+- [ ] Cap runs at 5 active players.
+- [ ] Store the generated world seed and movement-validating topology data.
+- [ ] Store exactly 5 entry points for each run.
+- [ ] Track each member's character id, entry index, and current macro-cell coordinate.
+- [ ] Decide how a run leaves the "open" state once the fifth player enters.
 
 Suggested file targets:
-- `convex/telemetry.ts`
-- `app/composables/useReconnect.ts`
-- `docs/release-checklist.md`
-- `docs/incident-playbook.md`
+
+- `convex/schema.ts`
+- `convex/runs.ts`
+- `shared/game/world/types.ts`
+- `shared/game/world/generateEntryPoints.ts`
+- `shared/game/__tests__/entry-points.test.ts`
 
 Acceptance tests:
-- [ ] Mid-session disconnect and reconnect restores state correctly.
-- [ ] Core metrics are visible for session health.
-- [ ] First live playtest completes without critical desync.
+
+- [ ] A run can be created with 5 entry points.
+- [ ] Entry points are one-way entrances into valid macro cells.
+- [ ] A run tracks 0 to 5 active members.
+- [ ] Player active-run lookup is efficient and indexed.
+
+## Step 4: Enter Maze Mutation
+
+Goal:
+
+- Create or join an active run from a valid character-creation state.
+
+Tasks:
+
+- [ ] Implement `enterMaze`.
+- [ ] Require an authenticated player.
+- [ ] Require a valid character.
+- [ ] Return an existing active run membership for the same player instead of creating duplicates.
+- [ ] Join an existing open run with fewer than 5 members when available.
+- [ ] Create a new generated run when no open run has capacity.
+- [ ] Randomly assign one unused entry point to the entering player.
+- [ ] Mark run full or otherwise stop accepting members once it reaches 5 players.
+- [ ] Return the destination `runId` to the client.
+- [ ] Navigate to `/run/:runId` after success.
+
+Suggested file targets:
+
+- `convex/runs.ts`
+- `convex/characters.ts`
+- `convex/lobbies.ts`
+- `app/pages/character/create.vue` or `app/components/game/CharacterCreationPanel.vue`
+- `app/composables/useGameSession.ts`
+
+Acceptance tests:
+
+- [ ] First valid entrant creates a new run.
+- [ ] Entrants 2 through 5 join the same open run.
+- [ ] Sixth entrant does not overfill the run.
+- [ ] Repeated `Enter Maze` submissions by the same player return the same membership.
+- [ ] Each player receives a unique entry point within the run.
+
+## Step 5: Authoritative Exploration Movement
+
+Goal:
+
+- Prove macro-cell movement through directed and bidirectional passages.
+
+Tasks:
+
+- [ ] Add movement intent mutation.
+- [ ] Add run view query with current player, party positions, current cell, and legal exits.
+- [ ] Validate player belongs to the run.
+- [ ] Validate movement starts from the player's current macro cell.
+- [ ] Allow valid directed connection traversal.
+- [ ] Reject reverse traversal through one-way macro-cell passages.
+- [ ] Reject reverse traversal through one-way entry points.
+- [ ] Update player position after valid movement.
+- [ ] Keep movement state synchronized across clients.
+
+Suggested file targets:
+
+- `convex/exploration.ts`
+- `convex/runs.ts`
+- `shared/game/world/types.ts`
+- `shared/game/world/getLegalMoves.ts`
+- `shared/game/__tests__/movement.test.ts`
+- `app/composables/useGameSession.ts`
+
+Acceptance tests:
+
+- [ ] Valid movement updates the player's macro-cell position.
+- [ ] Movement from the wrong source cell is rejected.
+- [ ] Reverse traversal through one-way passages is rejected.
+- [ ] Two-way passages work both directions.
+- [ ] Two clients can observe synchronized party positions.
+
+## Step 6: Empty Maze Run UI
+
+Goal:
+
+- Give players a usable debug-grade exploration screen.
+
+Tasks:
+
+- [ ] Add `/run/:runId` page.
+- [ ] Load run state from Convex.
+- [ ] Render current macro-cell coordinate.
+- [ ] Render party positions.
+- [ ] Render available exits from the current cell.
+- [ ] Make one-way and two-way exits visually distinct.
+- [ ] Add movement controls that call the authoritative movement mutation.
+- [ ] Show server-side movement errors in the UI.
+- [ ] Avoid combat, inventory, objective, and enemy panels for MVP-1.
+
+Suggested file targets:
+
+- `app/pages/run/[runId].vue`
+- `app/components/game/ExplorationViewport.vue`
+- `app/components/game/PartyStatePanel.vue`
+- `app/composables/useGameSession.ts`
+- `app/stores/gameSession.ts`
+
+Acceptance tests:
+
+- [ ] Player can load `/run/:runId` after entering the maze.
+- [ ] Player can move through legal exits.
+- [ ] Illegal movement reports a readable error.
+- [ ] One-way and two-way exits are understandable at a glance.
+- [ ] Party movement updates are visible without a page reload.
+
+## Step 7: Verification And Release Gate
+
+Goal:
+
+- Prove MVP-1 works locally before merging.
+
+Tasks:
+
+- [ ] Add shared-game tests for character creation.
+- [ ] Add shared-game tests for entry-point generation.
+- [ ] Add shared-game tests for movement legality.
+- [ ] Add Convex tests for character creation if test harness supports it in this pass.
+- [ ] Add Convex tests for `enterMaze` and run capacity if test harness supports it in this pass.
+- [ ] Add manual two-client smoke test notes.
+- [ ] Update docs for any architecture changes made during implementation.
+
+Commands:
+
+- [ ] `bun run lint`
+- [ ] `bun run typecheck`
+- [ ] `bun run test`
+- [ ] `bun run build`
+
+Acceptance tests:
+
+- [ ] Authenticated user can ready up and reach character creation.
+- [ ] Valid character can enter the maze.
+- [ ] First entrant creates a run.
+- [ ] Up to 5 entrants can share the same run.
+- [ ] Movement through an empty maze works.
+- [ ] One-way and two-way passage behavior is verified.
+
+## Deferred Backlog
+
+Do not pull these into MVP-1 unless the MVP is already complete:
+
+- [ ] Reconnect and session resume handling.
+- [ ] Nexus-core objective progression.
+- [ ] Signal fragments and final-exit completion.
+- [ ] Itemization and splice-module progression.
+- [ ] Encounter spawning.
+- [ ] Enemy AI.
+- [ ] Combat lifecycle and combat UI.
+- [ ] Phaser production renderer.
+- [ ] Sprite atlas manifest and asset pipeline.
+- [ ] Telemetry and diagnostics.
+- [ ] Moderation and abuse safeguards.
+- [ ] Additional auth providers.
 
 ## Cross-Phase Definition Of Done
 
