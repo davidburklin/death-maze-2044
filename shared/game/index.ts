@@ -1,5 +1,7 @@
 export * from "./world/types";
 export * from "./world/generateWorld";
 export * from "./world/validateWorld";
+export * from "./characters/types";
+export * from "./characters/createCharacter";
 export * from "./simulation/objectiveState";
 export * from "./combat/stepCombatTurn";

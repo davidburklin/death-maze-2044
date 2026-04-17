@@ -27,6 +27,14 @@ export default defineSchema({
     playerId: v.id("players"),
     slotIndex: v.number(),
     archetype: v.string(),
+    survivalBias: v.optional(
+      v.union(
+        v.literal("strength"),
+        v.literal("perception"),
+        v.literal("agility"),
+        v.literal("intelligence"),
+      ),
+    ),
     attributes: v.object({
       strength: v.number(),
       perception: v.number(),

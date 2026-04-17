@@ -90,15 +90,15 @@ Goal:
 
 Tasks:
 
-- [ ] Decide whether character creation is a dedicated route or an in-lobby screen state.
-- [ ] Route ready players from lobby to character creation.
-- [ ] Add `Unready` action that clears ready state and returns to lobby.
-- [ ] Add `Enter Maze` action that remains disabled until the character is valid.
-- [ ] Define the MVP character shape shared by frontend and Convex.
-- [ ] Implement survival-bias choices that increase exactly one attribute by `1`.
-- [ ] Display the implant and survival-bias story material.
-- [ ] Persist or update the current player's MVP character.
-- [ ] Attach the valid character to the lobby member or upcoming run entry flow.
+- [x] Decide whether character creation is a dedicated route or an in-lobby screen state.
+- [x] Route ready players from lobby to character creation.
+- [x] Add `Unready` action that clears ready state and returns to lobby.
+- [x] Add `Enter Maze` action that remains disabled until the character is valid.
+- [x] Define the MVP character shape shared by frontend and Convex.
+- [x] Implement survival-bias choices that increase exactly one attribute by `1`.
+- [x] Display the implant and survival-bias story material.
+- [x] Persist or update the current player's MVP character.
+- [x] Attach the valid character to the lobby member or upcoming run entry flow.
 
 Suggested file targets:
 
@@ -114,12 +114,12 @@ Suggested file targets:
 
 Acceptance tests:
 
-- [ ] Ready player reaches character creation.
-- [ ] Base attributes are `1`.
-- [ ] Exactly one survival-bias attribute becomes `2`.
-- [ ] Invalid attribute payloads are rejected server-side.
-- [ ] `Enter Maze` is unavailable until the local form is valid.
-- [ ] `Unready` returns to lobby and clears ready state.
+- [x] Ready player reaches character creation.
+- [x] Base attributes are `1`.
+- [x] Exactly one survival-bias attribute becomes `2`.
+- [x] Invalid attribute payloads are rejected server-side.
+- [x] `Enter Maze` is unavailable until the local form is valid.
+- [x] `Unready` returns to lobby and clears ready state.
 
 ## Step 3: Active Run Data Model
 
