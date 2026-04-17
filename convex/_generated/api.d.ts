@@ -12,6 +12,7 @@ import type * as characters from "../characters.js";
 import type * as crons from "../crons.js";
 import type * as lobbies from "../lobbies.js";
 import type * as players from "../players.js";
+import type * as runs from "../runs.js";
 
 import type {
   ApiFromModules,
@@ -24,6 +25,7 @@ declare const fullApi: ApiFromModules<{
   crons: typeof crons;
   lobbies: typeof lobbies;
   players: typeof players;
+  runs: typeof runs;
 }>;
 
 /**

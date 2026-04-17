@@ -1,6 +1,6 @@
 # Death Maze 2044 Implementation Plan
 
-Last updated: 2026-04-16
+Last updated: 2026-04-17
 
 ## 1) Current Direction
 
@@ -39,15 +39,18 @@ Implemented or scaffolded:
 - Google identity flow and Convex player bootstrap.
 - Lobby profile setup, lobby chat, active member list, typing indicator, and ready/unready state.
 - Shared deterministic RNG, world generation, world validation, objective state primitives, and combat turn primitives.
+- Dedicated MVP character creation route with survival-bias validation and story material.
+- Convex character mutations/queries for the MVP creation contract.
+- Run and run-member tables for active empty-maze runs.
+- Five one-way run entry points generated per run.
+- `enterMaze` mutation that creates or joins an open run and assigns an unused entry point.
+- `/run/:runId` landing page for inspecting current run state and party positions.
 
 Not yet implemented for MVP-1:
 
-- Dedicated character-creation screen and validation flow.
-- Convex character mutations/queries for the MVP creation contract.
-- Run tables, run-membership tables, entry-point data, and active-run lifecycle.
-- `enterMaze` mutation that creates or joins a run.
 - Exploration movement mutation with directed-passage legality checks.
-- `/run/:runId` empty-maze exploration UI.
+- Legal-exit rendering and movement controls on `/run/:runId`.
+- Full empty-maze exploration UI acceptance for one-way and two-way movement.
 
 ## 3) Legacy Behavior To Port
 
@@ -187,6 +190,8 @@ Exit criteria:
 
 ### Step 3: Active Run Data Model
 
+Status: complete for MVP-1 run entry.
+
 - Add Convex tables and indexes for runs and run members.
 - Cap each run at 5 players.
 - Store the generated world seed or serialized topology needed for movement validation.
@@ -199,6 +204,8 @@ Exit criteria:
 - A run can represent up to 5 entrants and reject or avoid over-capacity membership.
 
 ### Step 4: Enter Maze Mutation
+
+Status: complete for MVP-1 run entry.
 
 - Implement `enterMaze` as the authoritative transition from character creation to run.
 - Require authentication, lobby membership or current ready state, and a valid character.
@@ -233,6 +240,8 @@ Exit criteria:
 - Multiple clients observe synchronized player positions.
 
 ### Step 6: Empty Maze Run UI
+
+Status: partially complete. `/run/:runId` loads run state and party positions; movement controls still depend on Step 5.
 
 - Add `/run/:runId`.
 - Render the current macro-cell, available exits, and party positions.

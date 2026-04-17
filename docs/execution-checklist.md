@@ -1,6 +1,6 @@
 # Death Maze 2044 Execution Checklist
 
-Last updated: 2026-04-16
+Last updated: 2026-04-17
 Owner: TBD
 
 Purpose:
@@ -129,14 +129,14 @@ Goal:
 
 Tasks:
 
-- [ ] Add `runs` table.
-- [ ] Add `runMembers` table.
-- [ ] Add indexes for active run lookup and player active membership lookup.
-- [ ] Cap runs at 5 active players.
-- [ ] Store the generated world seed and movement-validating topology data.
-- [ ] Store exactly 5 entry points for each run.
-- [ ] Track each member's character id, entry index, and current macro-cell coordinate.
-- [ ] Decide how a run leaves the "open" state once the fifth player enters.
+- [x] Add `runs` table.
+- [x] Add `runMembers` table.
+- [x] Add indexes for active run lookup and player active membership lookup.
+- [x] Cap runs at 5 active players.
+- [x] Store the generated world seed needed to regenerate movement-validating topology.
+- [x] Store exactly 5 entry points for each run.
+- [x] Track each member's character id, entry index, and current macro-cell coordinate.
+- [x] Decide how a run leaves the "open" state once the fifth player enters.
 
 Suggested file targets:
 
@@ -148,10 +148,10 @@ Suggested file targets:
 
 Acceptance tests:
 
-- [ ] A run can be created with 5 entry points.
-- [ ] Entry points are one-way entrances into valid macro cells.
-- [ ] A run tracks 0 to 5 active members.
-- [ ] Player active-run lookup is efficient and indexed.
+- [x] A run can be created with 5 entry points.
+- [x] Entry points are one-way entrances into valid macro cells.
+- [x] A run tracks 0 to 5 active members.
+- [x] Player active-run lookup is efficient and indexed.
 
 ## Step 4: Enter Maze Mutation
 
@@ -161,16 +161,16 @@ Goal:
 
 Tasks:
 
-- [ ] Implement `enterMaze`.
-- [ ] Require an authenticated player.
-- [ ] Require a valid character.
-- [ ] Return an existing active run membership for the same player instead of creating duplicates.
-- [ ] Join an existing open run with fewer than 5 members when available.
-- [ ] Create a new generated run when no open run has capacity.
-- [ ] Randomly assign one unused entry point to the entering player.
-- [ ] Mark run full or otherwise stop accepting members once it reaches 5 players.
-- [ ] Return the destination `runId` to the client.
-- [ ] Navigate to `/run/:runId` after success.
+- [x] Implement `enterMaze`.
+- [x] Require an authenticated player.
+- [x] Require a valid character.
+- [x] Return an existing active run membership for the same player instead of creating duplicates.
+- [x] Join an existing open run with fewer than 5 members when available.
+- [x] Create a new generated run when no open run has capacity.
+- [x] Randomly assign one unused entry point to the entering player.
+- [x] Mark run full or otherwise stop accepting members once it reaches 5 players.
+- [x] Return the destination `runId` to the client.
+- [x] Navigate to `/run/:runId` after success.
 
 Suggested file targets:
 
@@ -182,17 +182,21 @@ Suggested file targets:
 
 Acceptance tests:
 
-- [ ] First valid entrant creates a new run.
-- [ ] Entrants 2 through 5 join the same open run.
-- [ ] Sixth entrant does not overfill the run.
-- [ ] Repeated `Enter Maze` submissions by the same player return the same membership.
-- [ ] Each player receives a unique entry point within the run.
+- [x] First valid entrant creates a new run.
+- [x] Entrants 2 through 5 join the same open run.
+- [x] Sixth entrant does not overfill the run.
+- [x] Repeated `Enter Maze` submissions by the same player return the same membership.
+- [x] Each player receives a unique entry point within the run.
 
 ## Step 5: Authoritative Exploration Movement
 
 Goal:
 
 - Prove macro-cell movement through directed and bidirectional passages.
+
+Status:
+
+- Next implementation step.
 
 Tasks:
 
@@ -231,15 +235,15 @@ Goal:
 
 Tasks:
 
-- [ ] Add `/run/:runId` page.
-- [ ] Load run state from Convex.
-- [ ] Render current macro-cell coordinate.
-- [ ] Render party positions.
+- [x] Add `/run/:runId` page.
+- [x] Load run state from Convex.
+- [x] Render current macro-cell coordinate.
+- [x] Render party positions.
 - [ ] Render available exits from the current cell.
 - [ ] Make one-way and two-way exits visually distinct.
 - [ ] Add movement controls that call the authoritative movement mutation.
 - [ ] Show server-side movement errors in the UI.
-- [ ] Avoid combat, inventory, objective, and enemy panels for MVP-1.
+- [x] Avoid combat, inventory, objective, and enemy panels for MVP-1.
 
 Suggested file targets:
 
@@ -251,7 +255,7 @@ Suggested file targets:
 
 Acceptance tests:
 
-- [ ] Player can load `/run/:runId` after entering the maze.
+- [x] Player can load `/run/:runId` after entering the maze.
 - [ ] Player can move through legal exits.
 - [ ] Illegal movement reports a readable error.
 - [ ] One-way and two-way exits are understandable at a glance.
@@ -265,20 +269,24 @@ Goal:
 
 Tasks:
 
-- [ ] Add shared-game tests for character creation.
-- [ ] Add shared-game tests for entry-point generation.
+- [x] Add shared-game tests for character creation.
+- [x] Add shared-game tests for entry-point generation.
 - [ ] Add shared-game tests for movement legality.
 - [ ] Add Convex tests for character creation if test harness supports it in this pass.
 - [ ] Add Convex tests for `enterMaze` and run capacity if test harness supports it in this pass.
 - [ ] Add manual two-client smoke test notes.
-- [ ] Update docs for any architecture changes made during implementation.
+- [x] Update docs for any architecture changes made during implementation.
 
 Commands:
 
-- [ ] `bun run lint`
-- [ ] `bun run typecheck`
-- [ ] `bun run test`
-- [ ] `bun run build`
+- [x] `bun run lint`
+- [x] `bun run typecheck`
+- [x] `bun run test`
+- [x] `bun run build`
+
+Latest verification snapshot:
+
+- 2026-04-17: all four commands passed after Step 4. Re-run after movement lands.
 
 Acceptance tests:
 

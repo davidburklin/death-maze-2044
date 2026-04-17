@@ -1,6 +1,6 @@
 # Resume Handoff
 
-Last updated: 2026-04-16
+Last updated: 2026-04-17
 
 ## Current State
 
@@ -10,6 +10,10 @@ Last updated: 2026-04-16
 - Ready players route to `/character/create`.
 - MVP character creation is present, including survival-bias validation, implant story material, `Unready`, and disabled-until-valid `Enter Maze`.
 - Convex can save the current MVP character and attach it to the waiting lobby member.
+- Active run state is modeled in Convex with `runs` and `runMembers`.
+- Runs store a generated world seed, capacity status, member count, and exactly five one-way entry points.
+- `enterMaze` creates or joins an open run, caps runs at 5 players, assigns one unused entry point, and returns the destination run.
+- `/run/:runId` can load the current run, show the player's entry point and coordinate, list all entry points, and show party positions.
 - Shared deterministic RNG, world generation, world validation, objective-state primitives, and combat turn primitives are already present.
 - Combat primitives remain available, but combat is deferred until after MVP-1.
 - Itemization, enemies, objectives, Phaser production rendering, telemetry, and reconnect polish are deferred.
@@ -24,26 +28,26 @@ Last updated: 2026-04-16
 
 ## Recommended Next Coding Session
 
-Start with Step 3 in [docs/execution-checklist.md](./execution-checklist.md):
+Start with Step 5 in [docs/execution-checklist.md](./execution-checklist.md):
 
-1. Add `runs` and `runMembers` tables.
-2. Add indexes for open-run lookup and player active-run lookup.
-3. Cap active runs at 5 players.
-4. Store generated world seed/topology data needed for movement validation.
-5. Define exactly 5 one-way entry points per run.
-6. Track each run member's character, entry point, and current macro-cell coordinate.
+1. Add authoritative movement rules for run members.
+2. Add legal-exit calculation from the player's current macro cell.
+3. Reject reverse traversal through one-way entry points and directed macro-cell passages.
+4. Update the `/run/:runId` page with exits and movement controls.
+5. Add movement tests for one-way and two-way passage behavior.
 
 ## Session Re-entry Prompt
 
 Use this prompt on return:
 
-"Continue Death Maze 2044 from docs/execution-checklist.md on branch feature/chasing-mvp-1. Step 2 is complete; start with Step 3: active run data model for MVP-1, then proceed toward enterMaze and empty-maze movement."
+"Continue Death Maze 2044 from docs/execution-checklist.md on branch feature/chasing-mvp-1. Steps 2 through 4 are complete, and `/run/:runId` has a run-state landing page. Start with Step 5: authoritative empty-maze movement, then finish the run UI movement controls."
 
 ## Exit Criteria For Next Work Block
 
-- Convex schema supports active empty-maze runs.
-- Each run has exactly 5 one-way entry points.
-- A run can track 0 to 5 active members.
-- Player active-run lookup is indexed.
-- Any new run/entry-point logic has deterministic tests where practical.
+- Legal exits are derived server-side from the generated run world and the player's current position.
+- Valid movement updates the player's current macro-cell coordinate.
+- Reverse traversal through one-way entry points and one-way macro-cell passages is rejected.
+- Two-way passages can be traversed in both directions.
+- `/run/:runId` exposes movement controls and readable server-side movement errors.
+- New movement logic has deterministic tests where practical.
 - `bun run lint`, `bun run typecheck`, `bun run test`, and `bun run build` remain the release gate.

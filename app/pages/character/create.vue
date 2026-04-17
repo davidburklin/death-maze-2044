@@ -1,7 +1,7 @@
 <template>
   <UPage>
     <UPageBody>
-      <section class="dm-vibe-surface rounded-3xl border border-white/10 p-6 md:p-10">
+      <section class="dm-vibe-surface rounded-lg border border-white/10 p-6 md:p-10">
         <p class="dm-kicker">Regime Intake</p>
         <h1 class="dm-heading text-4xl md:text-5xl">Survival Bias</h1>
 
@@ -58,7 +58,7 @@
 
         <div v-else class="mt-8 grid gap-6 lg:grid-cols-[1.4fr_0.9fr]">
           <div class="space-y-4">
-            <p class="text-sm font-semibold uppercase tracking-wide text-neutral-300">
+            <p class="text-sm font-semibold uppercase text-neutral-300">
               Choose one bias
             </p>
 
@@ -82,7 +82,7 @@
                     <span class="text-lg font-semibold text-white">{{ option.title }}</span>
                     <UBadge color="success" variant="soft" :label="`+1 ${attributeLabels[option.key]}`" />
                   </span>
-                  <span class="text-xs uppercase tracking-wide text-emerald-200/80">
+                  <span class="text-xs uppercase text-emerald-200/80">
                     {{ option.implantSignal }}
                   </span>
                   <span class="text-sm leading-relaxed text-neutral-300">
@@ -93,7 +93,7 @@
             </div>
           </div>
 
-          <div class="rounded-2xl border border-white/15 bg-black/30 p-5">
+          <div class="rounded-lg border border-white/15 bg-black/30 p-5">
             <p class="text-base font-semibold text-white">Attribute imprint</p>
             <p class="mt-2 text-sm text-neutral-300">
               Baseline tissue response is flat. The selected survival bias receives the only sanctioned lift.
@@ -153,6 +153,10 @@ interface LobbyView {
 
 interface CurrentCharacter {
   survivalBias?: AttributeKey
+}
+
+interface EnterMazeResult {
+  runId: string
 }
 
 function extractErrorMessage(error: unknown, fallback: string): string {
@@ -261,10 +265,13 @@ const enterMaze = async (): Promise<void> => {
     await convexClient.mutation(api.characters.saveCurrentCharacter, {
       survivalBias: selectedBias.value,
     })
-    entryMessage.value = 'The implant accepts the imprint. Maze entry assignment is next.'
+
+    const result = await convexClient.mutation(api.runs.enterMaze, {}) as EnterMazeResult
+    entryMessage.value = 'The implant accepts the imprint. Maze entry assigned.'
+    await navigateTo(`/run/${result.runId}`)
   }
   catch (error) {
-    pageErrorMessage.value = extractErrorMessage(error, 'Failed to lock character.')
+    pageErrorMessage.value = extractErrorMessage(error, 'Failed to enter maze.')
   }
   finally {
     isSavingCharacter.value = false
