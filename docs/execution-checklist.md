@@ -196,19 +196,19 @@ Goal:
 
 Status:
 
-- Next implementation step.
+- Complete for MVP-1 movement proof.
 
 Tasks:
 
-- [ ] Add movement intent mutation.
-- [ ] Add run view query with current player, party positions, current cell, and legal exits.
-- [ ] Validate player belongs to the run.
-- [ ] Validate movement starts from the player's current macro cell.
-- [ ] Allow valid directed connection traversal.
-- [ ] Reject reverse traversal through one-way macro-cell passages.
-- [ ] Reject reverse traversal through one-way entry points.
-- [ ] Update player position after valid movement.
-- [ ] Keep movement state synchronized across clients.
+- [x] Add movement intent mutation.
+- [x] Add run view query with current player, party positions, current cell, and legal exits.
+- [x] Validate player belongs to the run.
+- [x] Validate movement starts from the player's current macro cell.
+- [x] Allow valid directed connection traversal.
+- [x] Reject reverse traversal through one-way macro-cell passages.
+- [x] Reject reverse traversal through one-way entry points.
+- [x] Update player position after valid movement.
+- [x] Keep movement state synchronized across clients.
 
 Suggested file targets:
 
@@ -221,11 +221,11 @@ Suggested file targets:
 
 Acceptance tests:
 
-- [ ] Valid movement updates the player's macro-cell position.
-- [ ] Movement from the wrong source cell is rejected.
-- [ ] Reverse traversal through one-way passages is rejected.
-- [ ] Two-way passages work both directions.
-- [ ] Two clients can observe synchronized party positions.
+- [x] Valid movement updates the player's macro-cell position.
+- [x] Movement from the wrong source cell is rejected.
+- [x] Reverse traversal through one-way passages is rejected.
+- [x] Two-way passages work both directions.
+- [x] Two clients can observe synchronized party positions.
 
 ## Step 6: Empty Maze Run UI
 
@@ -239,10 +239,10 @@ Tasks:
 - [x] Load run state from Convex.
 - [x] Render current macro-cell coordinate.
 - [x] Render party positions.
-- [ ] Render available exits from the current cell.
-- [ ] Make one-way and two-way exits visually distinct.
-- [ ] Add movement controls that call the authoritative movement mutation.
-- [ ] Show server-side movement errors in the UI.
+- [x] Render available exits from the current cell.
+- [x] Make one-way and two-way exits visually distinct.
+- [x] Add movement controls that call the authoritative movement mutation.
+- [x] Show server-side movement errors in the UI.
 - [x] Avoid combat, inventory, objective, and enemy panels for MVP-1.
 
 Suggested file targets:
@@ -256,10 +256,10 @@ Suggested file targets:
 Acceptance tests:
 
 - [x] Player can load `/run/:runId` after entering the maze.
-- [ ] Player can move through legal exits.
-- [ ] Illegal movement reports a readable error.
-- [ ] One-way and two-way exits are understandable at a glance.
-- [ ] Party movement updates are visible without a page reload.
+- [x] Player can move through legal exits.
+- [x] Illegal movement reports a readable error.
+- [x] One-way and two-way exits are understandable at a glance.
+- [x] Party movement updates are visible without a page reload.
 
 ## Step 7: Verification And Release Gate
 
@@ -271,7 +271,7 @@ Tasks:
 
 - [x] Add shared-game tests for character creation.
 - [x] Add shared-game tests for entry-point generation.
-- [ ] Add shared-game tests for movement legality.
+- [x] Add shared-game tests for movement legality.
 - [ ] Add Convex tests for character creation if test harness supports it in this pass.
 - [ ] Add Convex tests for `enterMaze` and run capacity if test harness supports it in this pass.
 - [ ] Add manual two-client smoke test notes.
@@ -286,7 +286,7 @@ Commands:
 
 Latest verification snapshot:
 
-- 2026-04-17: all four commands passed after Step 4. Re-run after movement lands.
+- 2026-04-17: all four commands passed after Step 5 movement landed.
 
 Acceptance tests:
 
@@ -294,8 +294,8 @@ Acceptance tests:
 - [ ] Valid character can enter the maze.
 - [ ] First entrant creates a run.
 - [ ] Up to 5 entrants can share the same run.
-- [ ] Movement through an empty maze works.
-- [ ] One-way and two-way passage behavior is verified.
+- [x] Movement through an empty maze works.
+- [x] One-way and two-way passage behavior is verified.
 
 ## Deferred Backlog
 

@@ -3,6 +3,13 @@ import { createMvpCharacter } from "../shared/game/characters/createCharacter";
 import type { AttributeKey } from "../shared/game/characters/types";
 import { createRng } from "../shared/game/random";
 import { generateEntryPoints } from "../shared/game/world/generateEntryPoints";
+import { generateWorld } from "../shared/game/world/generateWorld";
+import {
+  findLegalMove,
+  getLegalMoves,
+  isEntryPointReverseIntent,
+  type LegalMove
+} from "../shared/game/world/getLegalMoves";
 import { MAZE_ENTRY_POINT_COUNT, type CellCoord, type MazeEntryPoint } from "../shared/game/world/types";
 import type { Doc, Id } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
@@ -10,6 +17,10 @@ import type { MutationCtx, QueryCtx } from "./_generated/server";
 
 const RUN_MAX_PLAYERS = MAZE_ENTRY_POINT_COUNT;
 const MVP_CHARACTER_SLOT_INDEX = 0;
+const cellCoordValidator = v.object({
+  x: v.number(),
+  y: v.number(),
+});
 
 type RunStatus = "open" | "full" | "closed";
 
@@ -26,6 +37,15 @@ interface RunMemberView {
   entryIndex: number;
   position: CellCoord;
   isSelf: boolean;
+}
+
+interface MoveInRunResult {
+  position: CellCoord;
+  legalMoves: LegalMove[];
+}
+
+function coordEquals(left: CellCoord, right: CellCoord): boolean {
+  return left.x === right.x && left.y === right.y;
 }
 
 async function getCurrentPlayerId(ctx: MutationCtx | QueryCtx): Promise<Id<"players">> {
@@ -287,6 +307,7 @@ export const getRunView = query({
       .withIndex("by_run", (q) => q.eq("runId", args.runId))
       .take(RUN_MAX_PLAYERS);
 
+    const world = generateWorld({ seed: run.seed });
     const members: RunMemberView[] = [];
     for (const member of runMembers) {
       const memberPlayer = await ctx.db.get(member.playerId);
@@ -311,12 +332,66 @@ export const getRunView = query({
         memberCount: run.memberCount,
         entryPoints: run.entryPoints,
       },
+      world: {
+        width: world.width,
+        height: world.height,
+      },
       self: {
         memberId: selfMember._id,
         entryIndex: selfMember.entryIndex,
         position: selfMember.position,
+        legalMoves: getLegalMoves(world, selfMember.position),
       },
       members,
+    };
+  },
+});
+
+export const moveInRun = mutation({
+  args: {
+    runId: v.id("runs"),
+    from: cellCoordValidator,
+    connectionId: v.string(),
+  },
+  handler: async (ctx, args): Promise<MoveInRunResult> => {
+    const playerId = await getCurrentPlayerId(ctx);
+    const run = await ctx.db.get(args.runId);
+    if (!run) throw new ConvexError("Maze run not found.");
+    if (run.status === "closed") throw new ConvexError("Maze run is closed.");
+
+    const selfMember = await ctx.db
+      .query("runMembers")
+      .withIndex("by_run_and_player", (q) =>
+        q.eq("runId", args.runId).eq("playerId", playerId),
+      )
+      .unique();
+
+    if (!selfMember) {
+      throw new ConvexError("You are not in this maze run.");
+    }
+
+    if (!coordEquals(selfMember.position, args.from)) {
+      throw new ConvexError("Movement source is stale. Refresh run state.");
+    }
+
+    if (isEntryPointReverseIntent(run.entryPoints, selfMember.position, args.connectionId)) {
+      throw new ConvexError("Entry doors do not open from inside.");
+    }
+
+    const world = generateWorld({ seed: run.seed });
+    const legalMove = findLegalMove(world, selfMember.position, args.connectionId);
+    if (!legalMove) {
+      throw new ConvexError("Movement is not legal from this cell.");
+    }
+
+    await ctx.db.patch(selfMember._id, {
+      position: legalMove.to,
+      lastActivityAt: Date.now(),
+    });
+
+    return {
+      position: legalMove.to,
+      legalMoves: getLegalMoves(world, legalMove.to),
     };
   },
 });

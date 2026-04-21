@@ -13,6 +13,7 @@ MVP-1 is not the full first-playable loop from the original plan. It is a narrow
 - Character creation validates the entrant's starting attributes and survival-bias choice.
 - A valid entrant can enter an active maze run.
 - If no active run has capacity, entering the maze creates a new empty maze.
+- There is no minimum party size; solo entrants can enter immediately.
 - Up to 5 players can enter the same maze before it is full.
 - Each entrant is randomly assigned to one of 5 one-way entry points into a macro cell.
 - Players can move through an empty maze.
@@ -44,13 +45,13 @@ Implemented or scaffolded:
 - Run and run-member tables for active empty-maze runs.
 - Five one-way run entry points generated per run.
 - `enterMaze` mutation that creates or joins an open run and assigns an unused entry point.
-- `/run/:runId` landing page for inspecting current run state and party positions.
+- Authoritative movement mutation that validates current position, directed connections, and one-way entry doors.
+- `/run/:runId` exploration page for inspecting current run state, party positions, legal exits, and movement results.
 
 Not yet implemented for MVP-1:
 
-- Exploration movement mutation with directed-passage legality checks.
-- Legal-exit rendering and movement controls on `/run/:runId`.
-- Full empty-maze exploration UI acceptance for one-way and two-way movement.
+- Manual two-client smoke notes for the completed empty-maze movement proof.
+- Optional airlock or wait-screen polish, without adding a minimum party size.
 
 ## 3) Legacy Behavior To Port
 
@@ -224,6 +225,8 @@ Exit criteria:
 
 ### Step 5: Authoritative Exploration Movement
 
+Status: complete for MVP-1 movement proof.
+
 - Implement movement as a Convex mutation that accepts an intent to traverse a specific passage.
 - Validate that the player belongs to the run.
 - Validate that the passage begins at the player's current macro cell.
@@ -241,7 +244,7 @@ Exit criteria:
 
 ### Step 6: Empty Maze Run UI
 
-Status: partially complete. `/run/:runId` loads run state and party positions; movement controls still depend on Step 5.
+Status: complete for MVP-1 movement proof.
 
 - Add `/run/:runId`.
 - Render the current macro-cell, available exits, and party positions.

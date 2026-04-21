@@ -18,6 +18,15 @@
           :description="pageErrorMessage"
         />
 
+        <UAlert
+          v-if="movementErrorMessage"
+          class="mt-6"
+          color="error"
+          variant="soft"
+          title="Movement denied"
+          :description="movementErrorMessage"
+        />
+
         <div v-if="isPageLoading" class="mt-8 space-y-4">
           <USkeleton class="h-14 max-w-xl rounded-lg" />
           <USkeleton class="h-56 rounded-lg" />
@@ -59,6 +68,41 @@
             </div>
 
             <div class="mt-6">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <p class="text-sm font-semibold uppercase text-neutral-300">Available exits</p>
+                <p class="text-xs text-neutral-400">
+                  Grid {{ runView.world.width }}x{{ runView.world.height }}
+                </p>
+              </div>
+
+              <div v-if="runView.self.legalMoves.length > 0" class="mt-3 grid gap-2 sm:grid-cols-2">
+                <UButton
+                  v-for="move in runView.self.legalMoves"
+                  :key="move.connectionId"
+                  color="primary"
+                  variant="soft"
+                  :loading="movingConnectionId === move.connectionId"
+                  :disabled="isMoving"
+                  @click="moveThrough(move)"
+                >
+                  <span class="flex w-full items-center justify-between gap-3">
+                    <span>{{ directionLabels[move.direction] }} to {{ formatCoord(move.to) }}</span>
+                    <span class="text-xs uppercase text-neutral-300">{{ move.mode }}</span>
+                  </span>
+                </UButton>
+              </div>
+
+              <UAlert
+                v-else
+                class="mt-3"
+                color="warning"
+                variant="soft"
+                title="No unlocked exits"
+                description="The cell is sealed. Wait for updated route telemetry."
+              />
+            </div>
+
+            <div class="mt-6">
               <p class="text-sm font-semibold uppercase text-neutral-300">Entry points</p>
               <div class="mt-3 grid gap-2 sm:grid-cols-2">
                 <div
@@ -81,8 +125,8 @@
               class="mt-6"
               color="info"
               variant="soft"
-              title="Hold position"
-              description="The locks are quiet. The floor waits for the first authorized step."
+              title="Entry doors sealed"
+              description="The intake doors only open inward. The way back is gone."
             />
           </div>
 
@@ -116,11 +160,24 @@
 import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
 import { ConvexError } from 'convex/values'
-import { onMounted, ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
+
+const RUN_REFRESH_INTERVAL_MS = 2500
+
+type Direction = 'north' | 'east' | 'south' | 'west'
+type DoorMode = 'two-way' | 'one-way'
 
 interface CellCoord {
   x: number
   y: number
+}
+
+interface LegalMove {
+  connectionId: string
+  from: CellCoord
+  to: CellCoord
+  direction: Direction
+  mode: DoorMode
 }
 
 interface RunView {
@@ -136,10 +193,15 @@ interface RunView {
       to: CellCoord
     }>
   }
+  world: {
+    width: number
+    height: number
+  }
   self: {
     memberId: string
     entryIndex: number
     position: CellCoord
+    legalMoves: LegalMove[]
   }
   members: Array<{
     playerId: string
@@ -149,6 +211,11 @@ interface RunView {
     position: CellCoord
     isSelf: boolean
   }>
+}
+
+interface MoveInRunResult {
+  position: CellCoord
+  legalMoves: LegalMove[]
 }
 
 function extractErrorMessage(error: unknown, fallback: string): string {
@@ -162,8 +229,19 @@ const convexClient = useConvexClient()
 const { initialize, isAuthenticated } = useAuth()
 
 const isPageLoading = ref<boolean>(true)
+const isMoving = ref<boolean>(false)
+const movingConnectionId = ref<string | null>(null)
 const pageErrorMessage = ref<string | null>(null)
+const movementErrorMessage = ref<string | null>(null)
 const runView = ref<RunView | null>(null)
+const refreshTimer = ref<number | null>(null)
+
+const directionLabels: Record<Direction, string> = {
+  north: 'North',
+  east: 'East',
+  south: 'South',
+  west: 'West',
+}
 
 const resolveRunId = (): Id<'runs'> | null => {
   const rawRunId = route.params.runId
@@ -175,8 +253,17 @@ const formatCoord = (coord: CellCoord): string => {
   return `${coord.x},${coord.y}`
 }
 
-const loadRunView = async (): Promise<void> => {
-  isPageLoading.value = true
+const stopRunPolling = (): void => {
+  if (refreshTimer.value !== null) {
+    window.clearInterval(refreshTimer.value)
+    refreshTimer.value = null
+  }
+}
+
+const loadRunView = async (showLoading = true): Promise<boolean> => {
+  if (showLoading) {
+    isPageLoading.value = true
+  }
   pageErrorMessage.value = null
 
   try {
@@ -184,26 +271,93 @@ const loadRunView = async (): Promise<void> => {
 
     if (!isAuthenticated.value) {
       pageErrorMessage.value = 'Sign in is required to view an active run.'
-      return
+      return false
     }
 
     const runId = resolveRunId()
     if (!runId) {
       pageErrorMessage.value = 'Run id is invalid.'
-      return
+      return false
     }
 
     runView.value = await convexClient.query(api.runs.getRunView, { runId }) as RunView
+    return true
   }
   catch (error) {
     pageErrorMessage.value = extractErrorMessage(error, 'Failed to load run.')
+    return false
   }
   finally {
-    isPageLoading.value = false
+    if (showLoading) {
+      isPageLoading.value = false
+    }
+  }
+}
+
+const refreshRunView = async (): Promise<void> => {
+  if (isMoving.value) return
+  await loadRunView(false)
+}
+
+const startRunPolling = (): void => {
+  stopRunPolling()
+  refreshTimer.value = window.setInterval(() => {
+    void refreshRunView()
+  }, RUN_REFRESH_INTERVAL_MS)
+}
+
+const moveThrough = async (move: LegalMove): Promise<void> => {
+  const runId = resolveRunId()
+  const currentRunView = runView.value
+  if (!runId || !currentRunView || isMoving.value) return
+
+  isMoving.value = true
+  movingConnectionId.value = move.connectionId
+  movementErrorMessage.value = null
+
+  try {
+    const result = await convexClient.mutation(api.runs.moveInRun, {
+      runId,
+      from: currentRunView.self.position,
+      connectionId: move.connectionId,
+    }) as MoveInRunResult
+
+    runView.value = {
+      ...currentRunView,
+      self: {
+        ...currentRunView.self,
+        position: result.position,
+        legalMoves: result.legalMoves,
+      },
+      members: currentRunView.members.map(member =>
+        member.isSelf ? { ...member, position: result.position } : member
+      ),
+    }
+
+    await loadRunView(false)
+  }
+  catch (error) {
+    movementErrorMessage.value = extractErrorMessage(error, 'Failed to move.')
+    await loadRunView(false)
+  }
+  finally {
+    isMoving.value = false
+    movingConnectionId.value = null
+  }
+}
+
+const initializeRunPage = async (): Promise<void> => {
+  const loaded = await loadRunView()
+  if (loaded) {
+    startRunPolling()
   }
 }
 
 onMounted(() => {
-  void loadRunView()
+  void initializeRunPage()
+})
+
+onBeforeUnmount(() => {
+  stopRunPolling()
 })
 </script>
