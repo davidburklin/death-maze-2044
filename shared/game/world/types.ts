@@ -1,5 +1,6 @@
 export const WORLD_WIDTH = 25;
 export const WORLD_HEIGHT = 25;
+export const MAZE_ENTRY_POINT_COUNT = 5;
 
 export interface CellCoord {
   x: number;
@@ -54,6 +55,12 @@ export interface WorldGraph {
   nexusCore: NexusCoreDefinition;
   objective: WorldObjective;
   seed: number;
+}
+
+export interface MazeEntryPoint {
+  index: number;
+  label: string;
+  to: CellCoord;
 }
 
 export interface RunProgress {
