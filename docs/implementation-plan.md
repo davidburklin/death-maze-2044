@@ -1,36 +1,97 @@
 # Death Maze 2044 Implementation Plan
 
-Last updated: 2026-03-27
+Last updated: 2026-04-17
 
-## 1) Legacy Behavior To Port
+## 1) Current Direction
+
+The current branch target is `feature/chasing-mvp-1`.
+
+MVP-1 is not the full first-playable loop from the original plan. It is a narrower proof of the multiplayer spine:
+
+- Authenticated players enter the lobby.
+- Ready players move to character creation.
+- Character creation validates the entrant's starting attributes and survival-bias choice.
+- A valid entrant can enter an active maze run.
+- If no active run has capacity, entering the maze creates a new empty maze.
+- There is no minimum party size; solo entrants can enter immediately.
+- Up to 5 players can enter the same maze before it is full.
+- Each entrant is randomly assigned to one of 5 one-way entry points into a macro cell.
+- Players can move through an empty maze.
+- Server-side movement validation proves one-way and two-way macro-cell passages work as expected.
+
+Explicitly out of MVP-1:
+
+- Item drops, splice-module discovery, inventory progression, or graft-port reconfiguration.
+- Enemies, encounter spawning, combat instances, combat UI, rewards, or balance tuning.
+- Nexus-core completion, signal-fragment objectives, final-exit victory, or run win/loss state.
+- Phaser production rendering, sprite atlases, telemetry, moderation, and reconnect polish.
+
+## 2) Repo Baseline
+
+The repo is already past the original Phase 0/1 planning state.
+
+Implemented or scaffolded:
+
+- Nuxt 4 app shell and Death Maze branding.
+- Baseline scripts for `dev`, `build`, `generate`, `preview`, `lint`, `typecheck`, and `test`.
+- Vitest configuration and deterministic shared-game tests.
+- CI workflow for install, lint, typecheck, test, and build.
+- Convex scaffold, auth config, generated API files, and initial schema.
+- Google identity flow and Convex player bootstrap.
+- Lobby profile setup, lobby chat, active member list, typing indicator, and ready/unready state.
+- Shared deterministic RNG, world generation, world validation, objective state primitives, and combat turn primitives.
+- Dedicated MVP character creation route with survival-bias validation and story material.
+- Convex character mutations/queries for the MVP creation contract.
+- Run and run-member tables for active empty-maze runs.
+- Five one-way run entry points generated per run.
+- `enterMaze` mutation that creates or joins an open run and assigns an unused entry point.
+- Authoritative movement mutation that validates current position, directed connections, and one-way entry doors.
+- `/run/:runId` exploration page for inspecting current run state, party positions, legal exits, and movement results.
+
+Not yet implemented for MVP-1:
+
+- Manual two-client smoke notes for the completed empty-maze movement proof.
+- Optional airlock or wait-screen polish, without adding a minimum party size.
+
+## 3) Legacy Behavior To Port
 
 Legacy gameplay behavior exists in an external repo that is not part of this workspace.
 
 Porting rules:
+
 - Do not rely on local absolute file links in planning docs.
 - Before porting a subsystem, capture its expected inputs, outputs, invariants, and renamed terminology in this repo.
 - Once local contract tests exist, those tests become the normative reference for future refactors.
 - Record intentional deviations in [docs/legacy-port-notes.md](./legacy-port-notes.md).
 
-Initial subsystems to port by behavior:
-- World generation and topology
-- Deterministic RNG helpers
-- World validity and run-complete checks
-- Objective progression state updates
-- Combat initiative ordering and round advancement primitives
+Already ported or captured locally:
 
-Build new in this repo:
-- Encounter spawning
-- Enemy AI behaviors
-- Itemization and status effects
-- Multiplayer session orchestration and anti-cheat validation
-- Graphics and rendering pipeline
+- World generation and topology.
+- Deterministic RNG helpers.
+- World validity and run-complete checks.
+- Objective progression state updates.
+- Combat initiative ordering and round advancement primitives.
 
-## 2) Genre Migration Rules
+MVP-1 additions to define locally:
+
+- Five one-way run entry points.
+- Active-run capacity and run-membership rules.
+- Authoritative macro-cell movement through directed connections.
+
+Build new in this repo after MVP-1:
+
+- Encounter spawning.
+- Enemy AI behaviors.
+- Itemization and status effects.
+- Multiplayer combat orchestration and anti-cheat validation.
+- Graphics and rendering pipeline.
+
+## 4) Genre Migration Rules
 
 Legacy fantasy labels are replaced with 2044 sci-fi domain language.
 
 Core renames:
+
 - relic -> nexusCore
 - clue -> signalFragment
 - mastery -> override
@@ -39,248 +100,294 @@ Core renames:
 - manipulation gate -> sequenceGate
 
 Rule:
+
 - No medieval nomenclature survives in gameplay data models or UI copy.
 
-## 3) Target Runtime Architecture
+## 5) Runtime Architecture
 
 Primary stack:
-- Nuxt 4 + Vue 3 + TypeScript for the client
-- Pinia for client orchestration only
-- Convex for authoritative game state and real-time sync
-- Vercel for frontend deployment
+
+- Nuxt 4 + Vue 3 + TypeScript for the client.
+- Pinia for client orchestration only.
+- Convex for authoritative game state and real-time sync.
+- Vercel for frontend deployment.
 
 Code placement:
+
 - Shared deterministic domain rules live in `shared/game/*`.
-- Convex imports and executes those shared rules for authoritative outcomes.
+- Convex imports and executes shared rules for authoritative outcomes.
 - The Nuxt client may import shared modules only for rendering support, previews, and debug views.
-- Domain types belong in `shared/game/types.ts`; app-local view models stay under `app/` only when they are UI-specific.
+- Domain types belong in `shared/game/*`; app-local view models stay under `app/` only when they are UI-specific.
 
 Authoritative boundary:
+
 - All game-truth mutations run in Convex.
-- Client sends intents only such as move, interact, and combat action.
-- Client never resolves combat outcomes locally.
+- Client sends intents only, such as enter maze and move through a connection.
+- Client never resolves movement legality locally.
 - Client never commits authoritative state transitions from shared helpers.
 
-Hybrid loop:
-- Real-time party exploration for up to 5 players
-- Encounter trigger creates a combat instance
-- Initiative rounds execute only inside that combat instance
-- On resolution, players return to exploration state
+MVP-1 loop:
 
-## 4) Graphics Delivery Decision
+- Lobby.
+- Character creation.
+- Empty maze exploration for up to 5 players.
+- Directed movement through one-way and two-way macro-cell passages.
 
-### Option A: SVG/DOM Tactical View
+Post-MVP target loop:
 
-Pros:
-- Fastest to ship
-- Smallest payload
-- Easiest debugging
+- Real-time party exploration.
+- Encounter trigger creates a combat instance.
+- Initiative rounds execute only inside that combat instance.
+- On resolution, players return to exploration state.
 
-Cons:
-- Limited visual depth
-- Less game feel
+## 6) Graphics Delivery Decision
 
-### Option B: Canvas 2D + Phaser 3 (Recommended)
+MVP-1 renderer:
 
-Pros:
-- Strong performance
-- Good visual expression
-- Practical production cost
+- Use a low-fidelity tactical/debug renderer first.
+- Prioritize readable topology, current position, party positions, and legal exits.
+- Clearly distinguish one-way and two-way passages.
+- Do not block MVP-1 on Phaser, sprite atlases, animation, or production asset delivery.
 
-Cons:
-- Moderate complexity
-- Requires sprite pipeline discipline
+Post-MVP production direction:
 
-### Option C: WebGL/Three.js
+- Phaser 3 remains the preferred production renderer.
+- Keep a fallback tactical renderer for debugging and low-end devices.
 
-Pros:
-- Highest visual ceiling
+Asset delivery approach for later milestones:
 
-Cons:
-- Largest scope and asset burden
-- Higher mobile risk
+- Versioned sprite atlases and UI icon sheets in static hosting.
+- Hashed file names for cache busting.
+- CDN caching headers with immutable assets.
+- Asset manifest file mapping logical ids to versioned URLs.
 
-Decision for first playable milestone:
-- Choose Option B as the default rendering path.
-- Keep a low-fidelity Option A fallback layer for debug mode and low-end devices.
+## 7) MVP-1 Execution Plan
 
-Asset delivery approach:
-- Versioned sprite atlases and UI icon sheets in static hosting
-- Hashed file names for cache busting
-- CDN caching headers with immutable assets
-- Asset manifest file mapping logical ids to versioned URLs
+### Step 1: Planning Alignment
 
-## 5) Phased Execution
-
-### Phase 0: Foundations (1 week)
-
-- Install project dependencies and verify the starter app boots locally.
-- Add baseline developer scripts: `lint`, `typecheck`, `test`, and `build`.
-- Add Vitest and a minimal CI workflow so the checklist is executable from day one.
-- Add Convex to this repo and wire local and preview environments.
-- Implement Google OAuth as the only required provider for the first playable milestone.
-- Create initial shared domain types and deterministic utility placeholders in `shared/game`.
-- Replace starter branding on `/` and the default layout with a Death Maze shell.
+- Update planning docs to describe the narrowed MVP-1 scope.
+- Mark combat, itemization, enemies, and graphics production as deferred.
+- Update handoff notes so future sessions start from character creation and run entry, not Phase 0.
 
 Exit criteria:
-- Local Nuxt and Convex run end-to-end.
-- `bun run lint`, `bun run typecheck`, `bun run test`, and `bun run build` all pass.
-- Google sign-in works in local and preview.
-- Type-safe shared domain models compile.
 
-### Phase 1: Logic Port (1-2 weeks)
+- Planning docs describe `lobby -> character creation -> empty maze exploration`.
+- Remaining tasks map directly to the MVP-1 acceptance tests.
 
-- Port world generation, validation, and objective logic into `shared/game`.
-- Port initiative ordering and round advancement primitives into `shared/game`.
-- Add deterministic snapshot tests for fixed seeds.
-- Document any intentional deviations from legacy behavior in [docs/legacy-port-notes.md](./legacy-port-notes.md).
+### Step 2: Character Creation Contract
 
-Exit criteria:
-- Same seed produces reproducible world outputs.
-- Combat turn queue is deterministic under fixed inputs.
-- Local contract tests cover the first ported subsystems.
-
-### Phase 2: Multiplayer Core (1-2 weeks)
-
-- Implement Convex tables and indexes for identities, players, lobbies, runs, actors, combat instances, and action logs.
-- Implement mutations for create lobby, join lobby, ready up, start run, move, interact, enter combat, submit action, and resolve round.
-- Add subscription queries for live room and combat state.
-- Keep all legality checks and authoritative resolution in Convex.
+- Add an MVP character-creation route or screen reached after readying up.
+- Preserve the existing `Unready` behavior as an exit back to the lobby.
+- Add `Enter Maze`, disabled until the character is valid.
+- Implement survival-bias selection: base `1` in every attribute, plus `1` to exactly one selected attribute.
+- Include the implant and survival-bias story material in the UI copy.
+- Store only the MVP character state needed to enter the maze.
 
 Exit criteria:
-- 2 to 5 clients can join and stay synchronized.
-- Illegal actions are rejected server-side.
-- Duplicate submissions are idempotent.
 
-### Phase 3: First Playable UI (1-2 weeks)
+- Ready players reach character creation.
+- Invalid characters cannot enter the maze.
+- Unready returns the player to the lobby and clears ready state.
 
-- Replace the starter page with a marketing-forward home page and auth-aware CTA.
-- Implement lobby flow, exploration viewport, and party state panels.
-- Implement combat panel with initiative ladder, action selection, and combat log.
-- Connect UI to Convex queries and mutations through composables and Pinia.
+### Step 3: Active Run Data Model
 
-Exit criteria:
-- Full loop: lobby -> explore -> combat -> explore.
-- Home page and global layout no longer use starter branding.
+Status: complete for MVP-1 run entry.
 
-### Phase 4: Graphics Production Pass (1-2 weeks)
-
-- Integrate Phaser renderer and sprite atlas pipeline.
-- Add movement interpolation, impact feedback, health overlays, and status overlays.
-- Add fallback debug renderer.
+- Add Convex tables and indexes for runs and run members.
+- Cap each run at 5 players.
+- Store the generated world seed or serialized topology needed for movement validation.
+- Store five entry points, each representing a one-way entrance into a macro cell.
+- Track each run member's character, assigned entry point, and current macro-cell position.
 
 Exit criteria:
-- Stable frame pacing on desktop.
-- Acceptable mobile performance.
 
-### Phase 5: Balancing and Hardening (ongoing)
+- Convex schema supports active empty-maze runs.
+- A run can represent up to 5 entrants and reject or avoid over-capacity membership.
 
-- Add encounter tables, enemy kits, and status effects.
-- Add reconnect and resume support.
-- Add telemetry and balancing hooks.
-- Revisit additional auth providers only after first playtest metrics justify the added scope.
+### Step 4: Enter Maze Mutation
+
+Status: complete for MVP-1 run entry.
+
+- Implement `enterMaze` as the authoritative transition from character creation to run.
+- Require authentication, lobby membership or current ready state, and a valid character.
+- If the player already has an active run membership, return that run.
+- If an open active run exists with fewer than 5 players, join it.
+- If no open active run exists, generate a new maze and create a run.
+- Randomly assign one unused entry point to the player.
+- Route the client to `/run/:runId`.
 
 Exit criteria:
-- Stable multiplayer sessions with recoverable disconnects.
-- Session health and failure telemetry are visible.
 
-## 6) Immediate Next Actions
+- First entrant creates a run.
+- Entrants 2 through 5 join the same open run.
+- No run exceeds 5 active players.
+- Repeated `Enter Maze` submissions are idempotent for the same player.
 
-1. Install dependencies and add `lint`, `typecheck`, `test`, and `build` scripts.
-2. Add Vitest plus a minimal CI workflow.
-3. Scaffold Convex in this repo and establish schema skeletons for `players` and `identities`.
-4. Implement Google auth wiring end-to-end.
-5. Create `shared/game/types.ts` and deterministic utility placeholders.
-6. Replace the starter home page and header shell with Death Maze branding.
+### Step 5: Authoritative Exploration Movement
 
-## 7) Risks And Mitigations
+Status: complete for MVP-1 movement proof.
+
+- Implement movement as a Convex mutation that accepts an intent to traverse a specific passage.
+- Validate that the player belongs to the run.
+- Validate that the passage begins at the player's current macro cell.
+- Allow movement through two-way passages in either represented direction.
+- Allow movement through one-way passages only in the stored direction.
+- Reject reverse movement through one-way entry points and one-way macro-cell passages.
+- Update the player's current macro-cell position on valid movement.
+
+Exit criteria:
+
+- Invalid movement intents are rejected server-side.
+- One-way passages cannot be traversed backward.
+- Two-way passages can be traversed in both directions.
+- Multiple clients observe synchronized player positions.
+
+### Step 6: Empty Maze Run UI
+
+Status: complete for MVP-1 movement proof.
+
+- Add `/run/:runId`.
+- Render the current macro-cell, available exits, and party positions.
+- Show movement controls based on server-provided legal exits.
+- Distinguish one-way and two-way passages in the UI.
+- Avoid enemies, inventory, combat controls, and objective panels for MVP-1.
+
+Exit criteria:
+
+- A player can enter a run and move through the generated maze.
+- Two clients in the same run can observe each other's movement state.
+- The UI makes directed passage behavior understandable enough to test.
+
+### Step 7: Verification
+
+- Add deterministic tests for entry-point generation and movement rules.
+- Add Convex tests for `enterMaze`, run capacity, and movement rejection.
+- Run the standard verification suite.
+
+Exit criteria:
+
+- `bun run lint` passes.
+- `bun run typecheck` passes.
+- `bun run test` passes.
+- `bun run build` passes.
+
+## 8) Post-MVP Roadmap
+
+After MVP-1, resume the broader first-playable plan in this order:
+
+1. Reconnect and active-run resume behavior.
+2. Objective progression: signal fragments, nexus core, and final exit.
+3. Itemization and splice-module graft-port progression.
+4. Encounter spawning and enemy behavior.
+5. Combat instance lifecycle and combat UI.
+6. Phaser renderer and production asset pipeline.
+7. Telemetry, moderation, and live-readiness hardening.
+
+## 9) Risks And Mitigations
 
 Risk:
+
 - Deterministic drift between environments.
 
 Mitigation:
-- Centralize all authoritative RNG-driven decisions in Convex and verify them with seed snapshot tests over `shared/game`.
+
+- Centralize all authoritative RNG-driven decisions in Convex and verify them with seed and movement tests over `shared/game`.
 
 Risk:
-- Combat latency or race conditions in multiplayer.
+
+- Run creation or entry assignment races overfill a maze.
 
 Mitigation:
-- Enforce strict turn ownership checks and idempotent action mutation contracts.
+
+- Keep capacity checks and run-member insertion in a single Convex mutation, and make repeated entry attempts idempotent for each player.
 
 Risk:
-- Art pipeline slows feature delivery.
+
+- One-way semantics become ambiguous between entry points and normal macro-cell passages.
 
 Mitigation:
-- Ship grayscale placeholder atlases first, then replace them via manifest versioning.
+
+- Model entry points explicitly and test them separately from normal generated connections.
 
 Risk:
-- Auth scope expands before the core loop is playable.
+
+- Auth or profile scope expands before the movement proof is playable.
 
 Mitigation:
-- Ship Google first, defer secondary providers until after initial playtests, and keep account linking out of the critical path.
 
-## 8) Homepage And Entry Flow
+- Keep Google as the only provider, keep lobby profile fields minimal, and defer account linking until after MVP-1.
+
+## 10) Homepage And Entry Flow
 
 Base URL behavior:
-- `/` is a marketing-forward home page with hero art, game premise, and a clear play funnel.
-- Primary CTA is `Start Run` if authenticated or `Sign In to Enter the Maze` if anonymous.
-- Secondary CTA is `How It Works`.
 
-Hero treatment:
-- Reuse the current hero image from the README for launch iteration.
-- Add subtle animated overlays such as scanlines, dust, and warning-tape accents.
-- Keep the route lightweight for LCP by preloading only the critical hero asset.
+- `/` is a marketing-forward home page with game premise and a clear play funnel.
+- Primary CTA routes authenticated users toward `/lobby`.
+- Anonymous users are prompted to sign in before entering the lobby.
 
 Navigation states:
-- Anonymous: Home, Lore, How It Works, Sign In
-- Authenticated: Home, Lobby, Profile, Sign Out
 
-Routing outline:
-- `/` home and acquisition
-- `/lobby` party create, join, and ready state
-- `/run/:runId` active game session for exploration and combat
-- `/profile` player identity, character slots, and progression summary
+- Anonymous: Home, Lore, How It Works, Sign In.
+- Authenticated: Home, Lobby, Profile, Sign Out.
 
-## 9) Authentication Strategy
+MVP-1 routing outline:
+
+- `/` home and acquisition.
+- `/lobby` party staging, profile setup, chat, and ready state.
+- Character creation screen or route reached from ready state.
+- `/run/:runId` active empty-maze exploration.
+- `/profile` player identity and progression summary, after MVP-1 if it is not needed for the playtest.
+
+## 11) Authentication And Character Strategy
 
 Decision:
+
 - Use OAuth and OpenID providers for authentication.
 - Do not store passwords in project infrastructure.
-- Ship with Google only for the first playable milestone.
+- Ship with Google only for MVP-1.
 - Evaluate Discord only after the first closed playtest.
 - Do not add a third provider until usage data shows clear need.
 
 Identity model:
+
 - External providers authenticate the user.
 - Convex validates provider identity and maps it to an internal player id.
 - Gameplay tables reference the internal player id only.
 
 Data to store in Convex:
-- `players`: displayName, avatarUrl, createdAt, lastSeenAt
-- `identities`: playerId, provider, providerSubject, email, linkedAt
-- `characters`: playerId, slotIndex, archetype, attributes, inventory, progression
-- `sessions`: lobby membership and active run participation
 
-Character attributes for the first playable:
+- `players`: displayName, avatarUrl, createdAt, lastSeenAt.
+- `identities`: playerId, provider, providerSubject, tokenIdentifier, email, linkedAt.
+- `characters`: playerId, slotIndex, archetype or entrant profile, attributes, inventory placeholder, progression placeholder.
+- `lobbyMembers`: lobby membership, ready state, and selected character when applicable.
+- `runs`: active maze state and capacity.
+- `runMembers`: active run participation, assigned entry point, and current macro-cell position.
+
+Character attributes for MVP-1:
+
 - All characters start with a base value of `1` in each attribute.
-- At character creation, the Regime allows the entrant to choose one survival bias configuration, increasing one attribute by `1`.
-- Each character carries a standard cyber implant with four graft ports.
-- Splice modules can be found in the Maze. Installing a splice module into a graft port increases one chosen attribute by `1`.
+- At character creation, the Regime allows the entrant to choose one survival bias configuration, increasing exactly one attribute by `1`.
+- Each character carries a standard cyber implant with four graft ports as story material.
+- Graft ports exist in the fiction for MVP-1, but no splice modules are found, installed, removed, or reconfigured yet.
+- `strength`, `perception`, `agility`, and `intelligence` are stored and displayed.
+- Attribute bonuses may be described for flavor, but no combat, item, trap, or puzzle systems consume them in MVP-1.
+
+Post-MVP character progression:
+
+- Splice modules can be found in the Maze.
+- Installing a splice module into a graft port increases one chosen attribute by `1`.
 - Graft ports may all be committed to one attribute or split across multiple attributes in any combination.
 - This creates a practical attribute maximum of `6`: base `1`, one survival bias bonus, and four installed splice modules.
-- Installed splice modules occupy their graft ports, but the system is not intended to imply permanent lock-in. No removal or reconfiguration mechanic is defined for the first playable.
-- `strength`: each point above base `1` adds `10%` to the weapon's base melee damage.
-- `perception`: each point above base `1` adds `10%` to the chance to spot items, traps, and other points of interest.
-- `agility`: each point above base `1` adds `10%` dodge chance and `5%` damage reduction against incoming attacks.
-- `intelligence`: each point above base `1` adds `10%` to reasoning-heavy puzzle checks.
-- Attribute bonuses scale linearly above base `1` until all four graft ports are filled.
+- Installed splice modules occupy their graft ports, but no removal or reconfiguration mechanic is defined yet.
 
 Account linking rules:
-- Multi-provider linking is not required for the first playable milestone.
+
+- Multi-provider linking is not required for MVP-1.
 - If linking is added later, one player may connect multiple providers.
 - Provider-specific identity remains isolated in `identities`, never in `players`.
 
 Compliance and operational notes:
+
 - Publish privacy policy and terms pages before launch.
 - Request only minimal scopes such as `openid`, `profile`, and `email`.
 - Implement safe sign-out and token expiry handling.

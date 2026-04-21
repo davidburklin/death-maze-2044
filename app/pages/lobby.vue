@@ -728,11 +728,18 @@ const toggleReady = async (): Promise<void> => {
 
   isUpdatingReady.value = true
   lobbyErrorMessage.value = null
+  const nextReadyState = !lobbyView.value.selfReady
 
   try {
     await convexClient.mutation(api.lobbies.setCurrentPlayerReady, {
-      isReady: !lobbyView.value.selfReady,
+      isReady: nextReadyState,
     })
+
+    if (nextReadyState) {
+      await navigateTo('/character/create')
+      return
+    }
+
     await loadLobbyView()
   }
   catch (error) {

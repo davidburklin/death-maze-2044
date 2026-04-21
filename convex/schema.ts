@@ -27,6 +27,14 @@ export default defineSchema({
     playerId: v.id("players"),
     slotIndex: v.number(),
     archetype: v.string(),
+    survivalBias: v.optional(
+      v.union(
+        v.literal("strength"),
+        v.literal("perception"),
+        v.literal("agility"),
+        v.literal("intelligence"),
+      ),
+    ),
     attributes: v.object({
       strength: v.number(),
       perception: v.number(),
@@ -86,4 +94,40 @@ export default defineSchema({
     .index("by_lobby", ["lobbyId"])
     .index("by_player", ["playerId"])
     .index("by_lobby_and_player", ["lobbyId", "playerId"]),
+
+  runs: defineTable({
+    seed: v.number(),
+    status: v.union(v.literal("open"), v.literal("full"), v.literal("closed")),
+    maxPlayers: v.number(),
+    memberCount: v.number(),
+    entryPoints: v.array(v.object({
+      index: v.number(),
+      label: v.string(),
+      to: v.object({
+        x: v.number(),
+        y: v.number(),
+      }),
+    })),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_status", ["status"])
+    .index("by_status_and_member_count", ["status", "memberCount"]),
+
+  runMembers: defineTable({
+    runId: v.id("runs"),
+    playerId: v.id("players"),
+    characterId: v.id("characters"),
+    entryIndex: v.number(),
+    position: v.object({
+      x: v.number(),
+      y: v.number(),
+    }),
+    joinedAt: v.number(),
+    lastActivityAt: v.optional(v.number()),
+  })
+    .index("by_run", ["runId"])
+    .index("by_player", ["playerId"])
+    .index("by_run_and_player", ["runId", "playerId"])
+    .index("by_player_and_run", ["playerId", "runId"]),
 });
